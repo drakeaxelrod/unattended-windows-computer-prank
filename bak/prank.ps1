@@ -58,10 +58,21 @@ $global:config = @{
         "Moderate" { 8 }
         "Hollywood" { 16 }
     }
+    MaxActiveWindows = switch ($Intensity) {
+        "Mild" { 8 }  # Maximum total windows
+        "Moderate" { 15 }
+        "Hollywood" { 25 }
+    }
     RespawnChance = switch ($Intensity) {
         "Mild" { 10 }  # 10% chance to respawn
         "Moderate" { 30 }  # 30% chance
         "Hollywood" { 50 }  # 50% chance
+    }
+    # Module lifecycle durations (in seconds)
+    ModuleLifetime = @{
+        ShortLived = 180   # 3 minutes (Matrix, Hex, Glitch, Map)
+        MediumLived = 420  # 7 minutes (Infection, Keylogger, LateralMovement)
+        LongLived = 999999 # Until killswitch (Ransomware, DataExfil, Chat, Master, Browser modules)
     }
 }
 
@@ -146,6 +157,13 @@ function Should-Pause {
             Start-Sleep -Milliseconds 100
         }
     }
+}
+
+function Should-Exit-Module {
+    param([int]$maxDuration, [datetime]$startTime)
+    # Check if module should exit based on elapsed time
+    $elapsed = ((Get-Date) - $startTime).TotalSeconds
+    return ($elapsed -ge $maxDuration) -or (Should-Stop)
 }
 
 function Play-Sound {
@@ -243,17 +261,21 @@ function Spawn-Module {
         "$timestamp|$name" | Out-File -FilePath $global:moduleTracker -Append -ErrorAction SilentlyContinue
     } catch {}
 
+    # Determine if this module should stay open or auto-close
+    $longLivedModules = @("Master", "Ransomware", "DataExfil", "Chat", "BrowserCascade", "CryptoMiner")
+    $noExitFlag = if ($longLivedModules -contains $name) { "-NoExit" } else { "" }
+
     # Use CMD START to force a new window detached from the parent, passing through config
     $intensityArg = "-Intensity `"$($global:config.Intensity)`""
     $modeArg = "-Mode `"$($global:config.Mode)`""
-    $cmdArgs = "/c start `"$name`" powershell -ExecutionPolicy Bypass -NoExit -WindowStyle Normal -File `"$PSCommandPath`" -Module $name -Generation $($Generation + 1) $intensityArg $modeArg"
+    $cmdArgs = "/c start `"$name`" powershell -ExecutionPolicy Bypass $noExitFlag -WindowStyle Normal -File `"$PSCommandPath`" -Module $name -Generation $($Generation + 1) $intensityArg $modeArg"
     Start-Process cmd -ArgumentList $cmdArgs -WindowStyle Hidden
 
     # Respect spawn delay based on intensity
     Start-Sleep -Seconds $global:config.SpawnDelay
 
-    # Chance to spawn an additional random module for persistence
-    if ((Get-Random -Max 100) -lt $global:config.RespawnChance) {
+    # Chance to spawn an additional random module for persistence (reduced chance if not forced)
+    if (-not $Force -and (Get-Random -Max 100) -lt $global:config.RespawnChance) {
         $modules = @("Matrix", "Hex", "Map", "Glitch")
         $randomModule = Get-Random $modules
         if ($randomModule -ne $name) {
