@@ -103,9 +103,86 @@ function Start-Safety-Net {
     Start-Job -ScriptBlock $scriptBlock -ArgumentList $global:flagFile | Out-Null
 }
 
+function Show-HackProgress {
+    param([string]$task, [string]$color = 'Cyan', [switch]$fast)
+    Write-Host "`n  [$task]" -ForegroundColor $color
+    $progress = 0
+    $maxDelay = if ($fast) { 50 } else { 100 }
+    while ($progress -lt 100) {
+        if (Should-Stop) { return }
+        $progress += Get-Random -Minimum 2 -Maximum 15
+        if ($progress -gt 100) { $progress = 100 }
+        $width = 50
+        $filled = [math]::Floor(($progress / 100) * $width)
+        $empty = $width - $filled
+        $bar = "█" * $filled
+        $space = "░" * $empty
+        Write-Host "`r  $bar$space $progress%" -NoNewline -ForegroundColor $color
+        Start-Sleep -Milliseconds (Get-Random -Minimum 10 -Maximum $maxDelay)
+    }
+    Write-Host "`r  $('█' * 50) 100% ✓ COMPLETE" -ForegroundColor Green
+    Play-Sound "success"
+}
+
+function Show-SystemAlert {
+    param([string]$title, [string]$message, [string]$color="Red")
+    $width = 60
+    $padding = [math]::Floor(($width - $message.Length) / 2)
+    $padStr = " " * $padding
+    Write-Host "`n"
+    Write-Host "  ╔$([string]('═' * $width))╗" -ForegroundColor $color
+    Write-Host "  ║$([string](' ' * $width))║" -ForegroundColor $color
+    Write-Host "  ║$padStr$message$padStr ║" -ForegroundColor White -BackgroundColor $color
+    Write-Host "  ║$([string](' ' * $width))║" -ForegroundColor $color
+    Write-Host "  ╚$([string]('═' * $width))╝" -ForegroundColor $color
+    Play-Sound "alert"
+    Start-Sleep -Milliseconds 500
+}
+
 # ============================================================================
 # MODULES
 # ============================================================================
+
+function Run-Infection {
+    $host.UI.RawUI.WindowTitle = "VIRUS_PROPAGATION_UNIT"
+    $fakeComputers = @("HR-SERVER-01", "FINANCE-DESK-17", "CEO-LAPTOP-OMEGA", "MAIL-SRV-ALPHA", "DEV-PC-42", "SECURITY-CAM-GRID", "POWER-GRID-MAIN", "NUCLEAR-REACTOR-7")
+    $messages = @("Injecting Payload...", "Bypassing Firewall...", "Corrupting MBR...", "Exfiltrating Passwords...", "Encrypting Drive...")
+
+    while (-not (Should-Stop)) {
+        Clear-Host
+        $duration = 20
+        $startTime = Get-Date
+        while (((Get-Date) - $startTime).TotalSeconds -lt $duration) {
+            if (Should-Stop) { return }
+            $remaining = $duration - [int]((Get-Date) - $startTime).TotalSeconds
+            $pc = Get-Random $fakeComputers
+            $msg = Get-Random $messages
+            Write-Host "`n  ╔════════════════════════════════════════════════════════════════╗" -ForegroundColor Red
+            Write-Host ("  ║ ⚠️  INFECTION SPREADING - NODES COMPROMISED: {0,-15} ║" -f "$remaining") -ForegroundColor Yellow
+            Write-Host "  ╚════════════════════════════════════════════════════════════════╝" -ForegroundColor Red
+            Write-Host ("    ► TARGET NODE: {0}" -f $pc) -ForegroundColor Cyan
+            Write-Host ("    ► STATUS: {0}" -f $msg) -ForegroundColor Magenta
+            Start-Sleep -Milliseconds 400
+        }
+        Move-Window-Random
+    }
+}
+
+function Run-Glitch {
+    $host.UI.RawUI.WindowTitle = "SYSTEM_FAILURE"
+    while (-not (Should-Stop)) {
+        $intensity = Get-Random -Min 5 -Max 20
+        for ($i = 0; $i -lt $intensity; $i++) {
+            if (Should-Stop) { return }
+            $glitchText = -join ((0..120) | ForEach-Object { Get-Random -InputObject @('█', '▓', '▒', '░', '/', '\', '|', '-', 'X', '⚡', '☠', '☢') })
+            $bg = Get-Random -InputObject @('Black', 'DarkRed', 'DarkBlue', 'DarkMagenta')
+            $fg = Get-Random $global:colors
+            Write-Host $glitchText -ForegroundColor $fg -BackgroundColor $bg
+        }
+        Start-Sleep -Milliseconds 100
+        Move-Window-Random
+    }
+}
 
 function Run-Matrix {
     $host.UI.RawUI.WindowTitle = "MATRIX_NODE_$(Get-Random)"
@@ -215,25 +292,65 @@ function Run-Master {
     Type-Text "  > FAILED. ACCESS DENIED." "Red" 30
     Type-Text "  > OMEGA AI TAKING CONTROL." "Yellow" 50
 
-    # 3. Deployment
-    Spawn-Module "Matrix"
-    Start-Sleep -Seconds 2
-    Spawn-Module "Hex"
-    Start-Sleep -Seconds 2
-    Spawn-Module "Map"
-    Start-Sleep -Seconds 2
-    Spawn-Module "Chat"
-
-    # 4. The Loop
+    # 3. The Story Loop
+    $phase = 1
     while (-not (Should-Stop)) {
         Clear-Host
-        Write-Host "`n  [ SYSTEM STATUS: CRITICAL ]" -ForegroundColor Red
-        Write-Host "  [ TIME TO TOTAL FAILURE: $(Get-Random -Min 10 -Max 99) SECONDS ]" -ForegroundColor Yellow
-        Start-Sleep -Seconds 1
-        Move-Window-Random
+        Write-Host "`n  [ SYSTEM STATUS: CRITICAL - PHASE $phase ]" -ForegroundColor Red
 
-        # Respawn if closed (Simple persistence)
-        if ((Get-Random -Max 10) -eq 0) { Spawn-Module (Get-Random "Matrix","Hex","Map","Chat") }
+        switch ($phase) {
+            1 {
+                Write-Host "`n  [🔴 PHASE 1: NETWORK INFILTRATION 🔴]`n" -ForegroundColor Cyan
+                Spawn-Module "Matrix"
+                Show-HackProgress "PENETRATING FIREWALL" "Red" -fast
+                Show-HackProgress "ESCALATING PRIVILEGES" "Yellow" -fast
+            }
+            2 {
+                Write-Host "`n  [💀 PHASE 2: DATA EXFILTRATION 💀]`n" -ForegroundColor Magenta
+                Spawn-Module "Infection"
+                Show-HackProgress "BYPASSING IDS/IPS" "Magenta" -fast
+                Start-Sleep -Seconds 5
+            }
+            3 {
+                Write-Host "`n  [⚡ PHASE 3: TOTAL SYSTEM TAKEOVER ⚡]`n" -ForegroundColor Red
+                Spawn-Module "Hex"
+                $files = @("//CLASSIFIED/AREA51.DAT", "//TOPSECRET/LAUNCH_CODES.SYS", "//SYSTEM/ROOT/MASTER_KEY.DB")
+                foreach ($file in $files) {
+                    if (Should-Stop) { break }
+                    Type-Text "    ► ACCESSING: $file" "Red" 8 -glitch
+                    Show-HackProgress "DOWNLOAD" "Yellow" -fast
+                }
+            }
+            4 {
+                Write-Host "`n  [🔥 PHASE 4: CHAOS PROPAGATION 🔥]`n" -ForegroundColor Yellow
+                Spawn-Module "Glitch"
+                Show-SystemAlert "WARNING" "VISUAL CORTEX OVERLOAD" "DarkRed"
+                Start-Sleep -Seconds 5
+            }
+            5 {
+                Write-Host "`n  [🌐 PHASE 5: GLOBAL INFECTION 🌐]`n" -ForegroundColor Cyan
+                Spawn-Module "Map"
+                Show-HackProgress "ESTABLISHING BOTNET" "Green" -fast
+            }
+            6 {
+                Write-Host "`n  [👁️ PHASE 6: SURVEILLANCE 👁️]`n" -ForegroundColor DarkYellow
+                Spawn-Module "Chat"
+                Type-Text "  ► ACTIVATING WEBCAM..." "Yellow" 12
+                Type-Text "  ► ACTIVATING MICROPHONE..." "Yellow" 12
+                Start-Sleep -Seconds 5
+            }
+            default {
+                # Chaos Mode
+                Show-SystemAlert "CRITICAL ERROR" "SYSTEM INTEGRITY COMPROMISED" "Red"
+                if ((Get-Random -Max 3) -eq 0) { Spawn-Module (Get-Random "Matrix","Hex","Map","Chat","Infection","Glitch") }
+            }
+        }
+
+        $phase++
+        if ($phase -gt 10) { $phase = 10 } # Stay in chaos mode
+
+        Move-Window-Random
+        Start-Sleep -Seconds 2
     }
 }
 
@@ -253,6 +370,8 @@ elseif ($Module -eq "Matrix") { Run-Matrix }
 elseif ($Module -eq "Map") { Run-Map }
 elseif ($Module -eq "Hex") { Run-Hex }
 elseif ($Module -eq "Chat") { Run-Chat }
+elseif ($Module -eq "Infection") { Run-Infection }
+elseif ($Module -eq "Glitch") { Run-Glitch }
 
 # Cleanup if stopped
 Clear-Host
