@@ -1,18 +1,68 @@
 # ============================================================================
-# CYBER APOCALYPSE: OMEGA PROTOCOL
+# CYBER APOCALYPSE: OMEGA PROTOCOL - ENHANCED EDITION
 # ============================================================================
-# A Hollywood-style prank script for Windows.
-# SAFE TO USE: Type "secret" in ANY window to kill all processes.
+# A Hollywood-style security awareness training demonstration script.
+#
+# WARNING: FOR AUTHORIZED SECURITY AWARENESS TRAINING ONLY
+# SAFE TO USE: Press ESC, Ctrl+C, or type "secret" to terminate.
+#
+# PURPOSE: Educational tool to demonstrate attack scenarios in training
 # ============================================================================
 
 param(
-    [string]$Module = "Launcher",  # Launcher, Master, Matrix, Map, Hex, Chat, Glitch, Infection
-    [int]$Generation = 0
+    [string]$Module = "Launcher",  # Launcher, Master, Matrix, Map, Hex, Chat, Glitch, Infection, Ransomware, Keylogger, LateralMovement, DataExfil
+    [int]$Generation = 0,
+    [ValidateSet("Mild", "Moderate", "Hollywood")]
+    [string]$Intensity = "Hollywood",  # Mild (subtle), Moderate (noticeable), Hollywood (full chaos)
+    [ValidateSet("Demo", "Training", "FullAuto")]
+    [string]$Mode = "FullAuto",  # Demo (pausable), Training (educational), FullAuto (continuous)
+    [switch]$ShowConsent,  # Show consent screen before starting
+    [switch]$EducationalMode  # Add explanatory popups during execution
 )
 
 # Global Configuration
 $global:flagFile = "$env:TEMP\cyberApocalypseFlag.tmp"
 $global:inputBuffer = ""
+$global:pauseFlag = "$env:TEMP\cyberApocalypsePause.tmp"
+$global:sessionLog = @()
+
+# Intensity-based configuration
+$global:config = @{
+    Intensity = $Intensity
+    Mode = $Mode
+    SpawnDelay = switch ($Intensity) {
+        "Mild" { 10 }
+        "Moderate" { 5 }
+        "Hollywood" { 2 }
+    }
+    WindowMovementFrequency = switch ($Intensity) {
+        "Mild" { 200 }  # Rarely move windows
+        "Moderate" { 100 }
+        "Hollywood" { 30 }  # Move windows aggressively
+    }
+    TypeSpeed = switch ($Intensity) {
+        "Mild" { 40 }
+        "Moderate" { 25 }
+        "Hollywood" { 15 }
+    }
+    MaxModules = switch ($Intensity) {
+        "Mild" { 3 }
+        "Moderate" { 6 }
+        "Hollywood" { 12 }
+    }
+}
+
+# Color schemes for different terminal types
+$global:colors = @('Green', 'Cyan', 'Yellow', 'Magenta', 'Red', 'White')
+$global:hackColors = @{
+    Success = 'Green'
+    Warning = 'Yellow'
+    Critical = 'Red'
+    Info = 'Cyan'
+    Data = 'Magenta'
+    System = 'White'
+    Kali = 'Green'  # Kali Linux terminal color
+}
 
 # Global Error Trap to prevent immediate closure on crash
 trap {
@@ -27,9 +77,25 @@ trap {
 # ============================================================================
 
 function Should-Stop {
-    # 1. Check for "secret" typing in ANY window
+    # 1. Check for multiple killswitch methods
     if ($host.UI.RawUI.KeyAvailable) {
         $k = $host.UI.RawUI.ReadKey("NoEcho,IncludeKeyDown")
+
+        # ESC key detection (VirtualKeyCode 27)
+        if ($k.VirtualKeyCode -eq 27) {
+            Write-Host "`n[!] ESC pressed - Initiating shutdown..." -ForegroundColor Yellow
+            New-Item -Path $global:flagFile -ItemType File -Force | Out-Null
+            return $true
+        }
+
+        # Ctrl+C detection (Character 3)
+        if ($k.Character -eq 3) {
+            Write-Host "`n[!] Ctrl+C detected - Terminating..." -ForegroundColor Yellow
+            New-Item -Path $global:flagFile -ItemType File -Force | Out-Null
+            return $true
+        }
+
+        # Secret word detection
         if ($k.Character -ne 0) {
             $global:inputBuffer += $k.Character
             # Keep buffer short to prevent memory issues
@@ -38,7 +104,20 @@ function Should-Stop {
             }
             # Check for secret code
             if ($global:inputBuffer -match "secret") {
+                Write-Host "`n[!] Killswitch activated - Shutting down..." -ForegroundColor Yellow
                 New-Item -Path $global:flagFile -ItemType File -Force | Out-Null
+                return $true
+            }
+        }
+
+        # Pause detection (P key for Demo mode)
+        if ($global:config.Mode -eq "Demo" -and ($k.Character -eq 'p' -or $k.Character -eq 'P')) {
+            if (Test-Path $global:pauseFlag) {
+                Remove-Item $global:pauseFlag -Force
+                Write-Host "`n[▶] RESUMED" -ForegroundColor Green
+            } else {
+                New-Item -Path $global:pauseFlag -ItemType File -Force | Out-Null
+                Write-Host "`n[⏸] PAUSED - Press P to continue, ESC to quit" -ForegroundColor Yellow
             }
         }
     }
@@ -47,27 +126,92 @@ function Should-Stop {
     return (Test-Path $global:flagFile)
 }
 
+function Should-Pause {
+    # Check if we're in a paused state (Demo mode only)
+    if ($global:config.Mode -eq "Demo" -and (Test-Path $global:pauseFlag)) {
+        while ((Test-Path $global:pauseFlag) -and -not (Should-Stop)) {
+            Start-Sleep -Milliseconds 100
+        }
+    }
+}
+
 function Play-Sound {
     param([string]$type)
-    if ($type -eq "type") { [console]::beep(1200, 20) }
-    if ($type -eq "alert") { [console]::beep(500, 300); [console]::beep(500, 300) }
-    if ($type -eq "error") { [console]::beep(200, 400) }
-    if ($type -eq "success") { [console]::beep(1000, 100); [console]::beep(1500, 100) }
-    if ($type -eq "data") { [console]::beep((Get-Random -Min 800 -Max 2000), 10) }
-    if ($type -eq "boot") { [console]::beep(400, 200); Start-Sleep -m 50; [console]::beep(600, 200) }
+
+    # Respect intensity settings
+    if ($global:config.Intensity -eq "Mild") { return }
+
+    switch ($type) {
+        "type" { [console]::beep(1200, 20) }
+        "alert" {
+            [console]::beep(500, 300)
+            [console]::beep(500, 300)
+        }
+        "error" { [console]::beep(200, 400) }
+        "success" {
+            [console]::beep(1000, 100)
+            [console]::beep(1500, 100)
+        }
+        "data" { [console]::beep((Get-Random -Min 800 -Max 2000), 10) }
+        "boot" {
+            [console]::beep(400, 200)
+            Start-Sleep -m 50
+            [console]::beep(600, 200)
+        }
+        "breach" {
+            # Dramatic breach sound
+            [console]::beep(800, 150)
+            [console]::beep(600, 150)
+            [console]::beep(400, 300)
+        }
+        "encryption" {
+            # Rapid encryption sound
+            1..5 | ForEach-Object {
+                [console]::beep((Get-Random -Min 1000 -Max 2000), 50)
+                Start-Sleep -Milliseconds 30
+            }
+        }
+        "countdown" { [console]::beep(1500, 100) }
+        "critical" {
+            # Critical alert
+            [console]::beep(200, 200)
+            [console]::beep(400, 200)
+            [console]::beep(200, 200)
+        }
+        "scanning" { [console]::beep((Get-Random -Min 1500 -Max 2500), 30) }
+        "access" {
+            # Access granted sound
+            [console]::beep(800, 100)
+            [console]::beep(1200, 200)
+        }
+    }
 }
 
 function Type-Text {
-    param([string]$text, [string]$color = 'Green', [int]$speed = 20, [switch]$glitch)
+    param(
+        [string]$text,
+        [string]$color = 'Green',
+        [int]$speed = 0,  # 0 = use config default
+        [switch]$glitch,
+        [switch]$fast
+    )
+
+    # Use config speed if not specified
+    if ($speed -eq 0) {
+        $speed = if ($fast) { [int]($global:config.TypeSpeed * 0.5) } else { $global:config.TypeSpeed }
+    }
+
     foreach ($char in $text.ToCharArray()) {
         if (Should-Stop) { return }
+        Should-Pause
+
         if ($glitch -and (Get-Random -Max 20) -eq 0) {
             Write-Host ([char](Get-Random -Min 33 -Max 126)) -NoNewline -ForegroundColor (Get-Random $global:colors)
             Start-Sleep -m 10
             Write-Host "`b" -NoNewline
         }
         Write-Host $char -NoNewline -ForegroundColor $color
-        if ($char -ne ' ') { Play-Sound "type" }
+        if ($char -ne ' ' -and (Get-Random -Max 3) -eq 0) { Play-Sound "type" }
         Start-Sleep -Milliseconds $speed
     }
     Write-Host ""
@@ -76,8 +220,18 @@ function Type-Text {
 function Spawn-Module {
     param([string]$name)
     if (Should-Stop) { return }
-    # Use CMD START to force a new window detached from the parent
-    Start-Process cmd -ArgumentList "/c start `"$name`" powershell -ExecutionPolicy Bypass -NoExit -WindowStyle Normal -File `"$PSCommandPath`" -Module $name -Generation $($Generation + 1)" -WindowStyle Hidden
+
+    # Check if we've hit the module limit
+    if ($Generation -ge $global:config.MaxModules) { return }
+
+    # Use CMD START to force a new window detached from the parent, passing through config
+    $intensityArg = "-Intensity `"$($global:config.Intensity)`""
+    $modeArg = "-Mode `"$($global:config.Mode)`""
+    $cmdArgs = "/c start `"$name`" powershell -ExecutionPolicy Bypass -NoExit -WindowStyle Normal -File `"$PSCommandPath`" -Module $name -Generation $($Generation + 1) $intensityArg $modeArg"
+    Start-Process cmd -ArgumentList $cmdArgs -WindowStyle Hidden
+
+    # Respect spawn delay based on intensity
+    Start-Sleep -Seconds $global:config.SpawnDelay
 }
 
 # Window Moving Magic (Windows Only)
@@ -101,6 +255,9 @@ try {
 
 function Move-Window-Random {
     try {
+        # Only move if intensity allows
+        if ((Get-Random -Max 100) -gt $global:config.WindowMovementFrequency) { return }
+
         $hwnd = [PrankWindowManager]::GetConsoleWindow()
         $rect = New-Object PrankWindowManager+RECT
         [PrankWindowManager]::GetWindowRect($hwnd, [ref]$rect)
@@ -110,6 +267,69 @@ function Move-Window-Random {
         $y = Get-Random -Min 0 -Max (1080 - $h)
         [PrankWindowManager]::MoveWindow($hwnd, $x, $y, $w, $h, $true)
     } catch {}
+}
+
+function Show-ASCIIBanner {
+    param([string]$type)
+
+    $banners = @{
+        "Breach" = @"
+  ██████╗ ██████╗ ███████╗ █████╗  ██████╗██╗  ██╗
+  ██╔══██╗██╔══██╗██╔════╝██╔══██╗██╔════╝██║  ██║
+  ██████╔╝██████╔╝█████╗  ███████║██║     ███████║
+  ██╔══██╗██╔══██╗██╔══╝  ██╔══██║██║     ██╔══██║
+  ██████╔╝██║  ██║███████╗██║  ██║╚██████╗██║  ██║
+  ╚═════╝ ╚═╝  ╚═╝╚══════╝╚═╝  ╚═╝ ╚═════╝╚═╝  ╚═╝
+"@
+        "Ransomware" = @"
+  ██████╗  █████╗ ███╗   ██╗███████╗ ██████╗ ███╗   ███╗
+  ██╔══██╗██╔══██╗████╗  ██║██╔════╝██╔═══██╗████╗ ████║
+  ██████╔╝███████║██╔██╗ ██║███████╗██║   ██║██╔████╔██║
+  ██╔══██╗██╔══██║██║╚██╗██║╚════██║██║   ██║██║╚██╔╝██║
+  ██║  ██║██║  ██║██║ ╚████║███████║╚██████╔╝██║ ╚═╝ ██║
+  ╚═╝  ╚═╝╚═╝  ╚═╝╚═╝  ╚═══╝╚══════╝ ╚═════╝ ╚═╝     ╚═╝
+"@
+        "Omega" = @"
+   ██████╗ ███╗   ███╗███████╗ ██████╗  █████╗
+  ██╔═══██╗████╗ ████║██╔════╝██╔════╝ ██╔══██╗
+  ██║   ██║██╔████╔██║█████╗  ██║  ███╗███████║
+  ██║   ██║██║╚██╔╝██║██╔══╝  ██║   ██║██╔══██║
+  ╚██████╔╝██║ ╚═╝ ██║███████╗╚██████╔╝██║  ██║
+   ╚═════╝ ╚═╝     ╚═╝╚══════╝ ╚═════╝ ╚═╝  ╚═╝
+"@
+    }
+
+    if ($banners.ContainsKey($type)) {
+        Write-Host $banners[$type] -ForegroundColor Red
+    }
+}
+
+function Show-Educational {
+    param([string]$title, [string]$message)
+
+    if (-not $EducationalMode) { return }
+
+    Write-Host "`n╔════════════════════════════════════════════════════════════════╗" -ForegroundColor Blue
+    Write-Host "║ 📚 TRAINING NOTE: $($title.PadRight(44)) ║" -ForegroundColor Cyan
+    Write-Host "╠════════════════════════════════════════════════════════════════╣" -ForegroundColor Blue
+
+    # Word wrap the message
+    $words = $message -split ' '
+    $line = "║ "
+    foreach ($word in $words) {
+        if (($line.Length + $word.Length) -gt 61) {
+            Write-Host ($line.PadRight(63) + "║") -ForegroundColor White
+            $line = "║ $word "
+        } else {
+            $line += "$word "
+        }
+    }
+    if ($line.Length -gt 2) {
+        Write-Host ($line.PadRight(63) + "║") -ForegroundColor White
+    }
+
+    Write-Host "╚════════════════════════════════════════════════════════════════╝" -ForegroundColor Blue
+    Start-Sleep -Seconds 3
 }
 
 # Password Listener (Runs in background job for every window)
@@ -132,23 +352,53 @@ function Start-Safety-Net {
 }
 
 function Show-HackProgress {
-    param([string]$task, [string]$color = 'Cyan', [switch]$fast)
+    param(
+        [string]$task,
+        [string]$color = 'Cyan',
+        [switch]$fast,
+        [switch]$realistic
+    )
+
     Write-Host "`n  [$task]" -ForegroundColor $color
     $progress = 0
+    $baseDelay = if ($fast) { 30 } else { 60 }
     $maxDelay = if ($fast) { 50 } else { 100 }
-    while ($progress -lt 100) {
-        if (Should-Stop) { return }
-        $progress += Get-Random -Minimum 2 -Maximum 15
-        if ($progress -gt 100) { $progress = 100 }
-        $width = 50
-        $filled = [math]::Floor(($progress / 100) * $width)
-        $empty = $width - $filled
-        $bar = "█" * $filled
-        $space = "░" * $empty
-        Write-Host "`r  $bar$space $progress%" -NoNewline -ForegroundColor $color
-        Start-Sleep -Milliseconds (Get-Random -Minimum 10 -Maximum $maxDelay)
+
+    # Realistic mode: show intermediate steps
+    $steps = if ($realistic) {
+        @(
+            @{p=15; msg="Initializing..."},
+            @{p=30; msg="Connecting to target..."},
+            @{p=55; msg="Bypassing authentication..."},
+            @{p=75; msg="Escalating privileges..."},
+            @{p=90; msg="Establishing backdoor..."},
+            @{p=100; msg="Complete"}
+        )
+    } else {
+        @(@{p=100; msg="Complete"})
     }
-    Write-Host "`r  $('█' * 50) 100% ✓ COMPLETE" -ForegroundColor Green
+
+    foreach ($step in $steps) {
+        while ($progress -lt $step.p) {
+            if (Should-Stop) { return }
+            Should-Pause
+
+            $progress += Get-Random -Minimum 2 -Maximum 15
+            if ($progress -gt $step.p) { $progress = $step.p }
+
+            $width = 50
+            $filled = [math]::Floor(($progress / 100) * $width)
+            $empty = $width - $filled
+            $bar = "█" * $filled
+            $space = "░" * $empty
+
+            Write-Host "`r  $bar$space $progress% - $($step.msg)" -NoNewline -ForegroundColor $color
+            if ((Get-Random -Max 10) -eq 0) { Play-Sound "scanning" }
+            Start-Sleep -Milliseconds (Get-Random -Minimum $baseDelay -Maximum $maxDelay)
+        }
+    }
+
+    Write-Host "`r  $('█' * 50) 100% ✓ COMPLETE                    " -ForegroundColor Green
     Play-Sound "success"
 }
 
@@ -168,7 +418,239 @@ function Show-SystemAlert {
 }
 
 # ============================================================================
-# MODULES
+# NEW ATTACK SIMULATION MODULES
+# ============================================================================
+
+function Run-Ransomware {
+    $host.UI.RawUI.WindowTitle = "RANSOMWARE_ENCRYPTION_ENGINE"
+    $host.UI.RawUI.BackgroundColor = "DarkRed"
+    Clear-Host
+
+    Show-ASCIIBanner "Ransomware"
+    Play-Sound "critical"
+    Start-Sleep -Seconds 2
+
+    Show-Educational "Ransomware Attack" "This simulates ransomware encryption. Real ransomware encrypts files and demands payment. Always maintain backups and use anti-malware protection."
+
+    $fileTypes = @("*.doc", "*.pdf", "*.xlsx", "*.jpg", "*.png", "*.mp4", "*.zip", "*.sql", "*.pst")
+    $fakePaths = @(
+        "C:\Users\Administrator\Documents",
+        "C:\Users\CEO\Desktop",
+        "D:\CompanyData\Financial",
+        "E:\Backup\2024",
+        "\\SERVER\Shared\HR"
+    )
+
+    while (-not (Should-Stop)) {
+        Should-Pause
+        Clear-Host
+
+        Write-Host "`n╔═══════════════════════════════════════════════════════════════════╗" -ForegroundColor Red
+        Write-Host "║         YOUR FILES HAVE BEEN ENCRYPTED - PAY 5 BTC NOW!          ║" -ForegroundColor White -BackgroundColor DarkRed
+        Write-Host "╚═══════════════════════════════════════════════════════════════════╝" -ForegroundColor Red
+
+        # Countdown timer
+        $timeLeft = 300 - (Get-Random -Max 150)
+        Write-Host "`n  ⏰ Time until files are permanently deleted: " -NoNewline -ForegroundColor Yellow
+        Write-Host "$($timeLeft) seconds" -ForegroundColor Red -BackgroundColor Black
+        Play-Sound "countdown"
+
+        Write-Host "`n  📊 Encryption Progress:`n" -ForegroundColor Cyan
+
+        # Simulate file encryption
+        foreach ($i in 1..8) {
+            if (Should-Stop) { return }
+            $path = Get-Random $fakePaths
+            $type = Get-Random $fileTypes
+            $count = Get-Random -Min 10 -Max 500
+
+            Write-Host "  [" -NoNewline -ForegroundColor DarkGray
+            Write-Host "✓" -NoNewline -ForegroundColor Red
+            Write-Host "] $path\$type ($count files) " -NoNewline -ForegroundColor Gray
+            Write-Host "ENCRYPTED" -ForegroundColor Red
+
+            Play-Sound "encryption"
+            Start-Sleep -Milliseconds 800
+        }
+
+        Write-Host "`n  💰 Bitcoin Address: 1A1zP1eP5QGefi2DMPTfTL5SLmv7DivfNa" -ForegroundColor Yellow
+        Write-Host "  📧 Contact: decrypt@evilhackers.onion`n" -ForegroundColor Yellow
+
+        Start-Sleep -Seconds 3
+        Move-Window-Random
+    }
+}
+
+function Run-Keylogger {
+    $host.UI.RawUI.WindowTitle = "KEYLOGGER_CAPTURE_DAEMON"
+    Clear-Host
+
+    Show-Educational "Keylogger Attack" "Keyloggers capture everything you type, including passwords. Use virtual keyboards for sensitive data and enable 2FA."
+
+    $fakeKeys = @("password123", "admin@company.com", "SecretPlan2024", "Credit Card: 4532", "PIN: 1234")
+    $applications = @("Chrome - gmail.com", "Excel - Budget_2024.xlsx", "Notepad - passwords.txt", "Outlook", "Teams Chat")
+
+    while (-not (Should-Stop)) {
+        Should-Pause
+        Clear-Host
+
+        Write-Host "`n  ╔══════════════════════════════════════════════════╗" -ForegroundColor DarkMagenta
+        Write-Host "  ║    KEYLOGGER ACTIVE - CAPTURING ALL INPUT       ║" -ForegroundColor Magenta
+        Write-Host "  ╚══════════════════════════════════════════════════╝`n" -ForegroundColor DarkMagenta
+
+        for ($i = 0; $i -lt 15; $i++) {
+            if (Should-Stop) { return }
+
+            $timestamp = Get-Date -Format "HH:mm:ss"
+            $app = Get-Random $applications
+            $captured = Get-Random $fakeKeys
+
+            Write-Host "  [$timestamp] " -NoNewline -ForegroundColor DarkGray
+            Write-Host "$app" -NoNewline -ForegroundColor Cyan
+            Write-Host " » " -NoNewline -ForegroundColor DarkGray
+            Write-Host $captured -ForegroundColor Yellow
+
+            if ((Get-Random -Max 5) -eq 0) { Play-Sound "data" }
+            Start-Sleep -Milliseconds (Get-Random -Min 300 -Max 800)
+        }
+
+        Write-Host "`n  📡 Uploading captured data to C2 server..." -ForegroundColor Red
+        Start-Sleep -Seconds 2
+
+        if ((Get-Random -Max 20) -eq 0) { Move-Window-Random }
+    }
+}
+
+function Run-LateralMovement {
+    $host.UI.RawUI.WindowTitle = "LATERAL_MOVEMENT_ENGINE"
+    Clear-Host
+
+    Show-Educational "Lateral Movement" "After initial breach, attackers move sideways through the network to find valuable targets. Network segmentation helps prevent this."
+
+    $network = @(
+        @{name="WORKSTATION-042"; ip="10.0.1.42"; status="COMPROMISED"; role="Initial Access"},
+        @{name="FILE-SERVER-01"; ip="10.0.2.15"; status="SCANNING"; role="Data Repository"},
+        @{name="DC-PRIMARY"; ip="10.0.0.10"; status="PROBING"; role="Domain Controller"},
+        @{name="SQL-PROD-01"; ip="10.0.3.88"; status="VULNERABLE"; role="Database Server"},
+        @{name="CEO-LAPTOP"; ip="10.0.1.100"; status="TARGET"; role="High-Value Target"}
+    )
+
+    $techniques = @(
+        "PSExec credential reuse",
+        "Pass-the-Hash attack",
+        "WMI remote execution",
+        "RDP hijacking",
+        "SMB exploit (EternalBlue)"
+    )
+
+    while (-not (Should-Stop)) {
+        Should-Pause
+        Clear-Host
+
+        Write-Host "`n  ═══════════════════════════════════════════════════════" -ForegroundColor Cyan
+        Write-Host "  🌐 NETWORK PENETRATION - LATERAL MOVEMENT IN PROGRESS" -ForegroundColor Yellow
+        Write-Host "  ═══════════════════════════════════════════════════════`n" -ForegroundColor Cyan
+
+        foreach ($node in $network) {
+            if (Should-Stop) { return }
+
+            $statusColor = switch ($node.status) {
+                "COMPROMISED" { "Red" }
+                "SCANNING" { "Yellow" }
+                "PROBING" { "Cyan" }
+                "VULNERABLE" { "Magenta" }
+                "TARGET" { "White" }
+            }
+
+            Write-Host "  [" -NoNewline -ForegroundColor DarkGray
+            Write-Host $node.status.PadRight(12) -NoNewline -ForegroundColor $statusColor
+            Write-Host "] " -NoNewline -ForegroundColor DarkGray
+            Write-Host "$($node.name.PadRight(18)) " -NoNewline -ForegroundColor Green
+            Write-Host "$($node.ip.PadRight(14)) " -NoNewline -ForegroundColor DarkGreen
+            Write-Host $node.role -ForegroundColor Gray
+        }
+
+        Write-Host "`n  🎯 Current Technique: " -NoNewline -ForegroundColor Cyan
+        Write-Host (Get-Random $techniques) -ForegroundColor Red
+
+        Show-HackProgress "EXPLOITING $(Get-Random $network).name" "Red" -fast -realistic
+
+        Start-Sleep -Seconds 2
+        if ((Get-Random -Max 15) -eq 0) { Move-Window-Random }
+    }
+}
+
+function Run-DataExfil {
+    $host.UI.RawUI.WindowTitle = "DATA_EXFILTRATION_MODULE"
+    Clear-Host
+
+    Show-Educational "Data Exfiltration" "Attackers steal sensitive data to sell or leak. Use DLP (Data Loss Prevention) tools and monitor unusual network traffic."
+
+    $dataTypes = @(
+        @{name="Employee_SSN_Database.sql"; size="2.4GB"; sensitivity="CRITICAL"},
+        @{name="Customer_CC_Details.xlsx"; size="890MB"; sensitivity="CRITICAL"},
+        @{name="Trade_Secrets_2024.pdf"; size="156MB"; sensitivity="HIGH"},
+        @{name="Financial_Records_Q4.csv"; size="1.2GB"; sensitivity="HIGH"},
+        @{name="Email_Archive.pst"; size="5.7GB"; sensitivity="MEDIUM"}
+    )
+
+    $c2Servers = @(
+        "185.220.101.42:443 (TOR Exit Node)",
+        "45.154.12.88:8080 (Bulletproof Hosting)",
+        "23.95.67.199:22 (Compromised VPS)"
+    )
+
+    while (-not (Should-Stop)) {
+        Should-Pause
+        Clear-Host
+
+        Write-Host "`n  ╔════════════════════════════════════════════════════════╗" -ForegroundColor Red
+        Write-Host "  ║   DATA EXFILTRATION IN PROGRESS - DO NOT SHUT DOWN   ║" -ForegroundColor White
+        Write-Host "  ╚════════════════════════════════════════════════════════╝`n" -ForegroundColor Red
+
+        $target = Get-Random $dataTypes
+        $server = Get-Random $c2Servers
+
+        Write-Host "  📁 File: " -NoNewline -ForegroundColor Cyan
+        Write-Host $target.name -ForegroundColor Yellow
+        Write-Host "  📊 Size: " -NoNewline -ForegroundColor Cyan
+        Write-Host $target.size -ForegroundColor White
+        Write-Host "  ⚠️  Sensitivity: " -NoNewline -ForegroundColor Cyan
+        $sensColor = if ($target.sensitivity -eq "CRITICAL") { "Red" } elseif ($target.sensitivity -eq "HIGH") { "Yellow" } else { "White" }
+        Write-Host $target.sensitivity -ForegroundColor $sensColor
+        Write-Host "  🌐 C2 Server: " -NoNewline -ForegroundColor Cyan
+        Write-Host $server -ForegroundColor Magenta
+
+        Write-Host ""
+
+        # Simulate upload with realistic progress
+        $chunks = 20
+        for ($i = 0; $i -le $chunks; $i++) {
+            if (Should-Stop) { return }
+            Should-Pause
+
+            $percent = [math]::Round(($i / $chunks) * 100)
+            $filled = [math]::Floor($i)
+            $empty = $chunks - $filled
+            $bar = "█" * $filled + "░" * $empty
+
+            $speed = Get-Random -Min 800 -Max 2500
+            Write-Host "`r  $bar $percent% ($speed KB/s)" -NoNewline -ForegroundColor Green
+
+            if ((Get-Random -Max 5) -eq 0) { Play-Sound "data" }
+            Start-Sleep -Milliseconds (Get-Random -Min 200 -Max 500)
+        }
+
+        Write-Host "`n  ✓ Upload complete - File staged for extraction`n" -ForegroundColor Green
+        Play-Sound "success"
+
+        Start-Sleep -Seconds 2
+        if ((Get-Random -Max 10) -eq 0) { Move-Window-Random }
+    }
+}
+
+# ============================================================================
+# EXISTING MODULES (ENHANCED)
 # ============================================================================
 
 function Run-Infection {
@@ -176,12 +658,16 @@ function Run-Infection {
     $fakeComputers = @("HR-SERVER-01", "FINANCE-DESK-17", "CEO-LAPTOP-OMEGA", "MAIL-SRV-ALPHA", "DEV-PC-42", "SECURITY-CAM-GRID", "POWER-GRID-MAIN", "NUCLEAR-REACTOR-7")
     $messages = @("Injecting Payload...", "Bypassing Firewall...", "Corrupting MBR...", "Exfiltrating Passwords...", "Encrypting Drive...")
 
+    Show-Educational "Malware Propagation" "Worms and viruses spread automatically across networks. Keep systems patched and use network segmentation to limit spread."
+
     while (-not (Should-Stop)) {
+        Should-Pause
         Clear-Host
         $duration = 20
         $startTime = Get-Date
         while (((Get-Date) - $startTime).TotalSeconds -lt $duration) {
             if (Should-Stop) { return }
+            Should-Pause
             $remaining = $duration - [int]((Get-Date) - $startTime).TotalSeconds
             $pc = Get-Random $fakeComputers
             $msg = Get-Random $messages
@@ -199,6 +685,7 @@ function Run-Infection {
 function Run-Glitch {
     $host.UI.RawUI.WindowTitle = "SYSTEM_FAILURE"
     while (-not (Should-Stop)) {
+        Should-Pause
         $intensity = Get-Random -Min 5 -Max 20
         for ($i = 0; $i -lt $intensity; $i++) {
             if (Should-Stop) { return }
@@ -217,6 +704,7 @@ function Run-Matrix {
     $host.UI.RawUI.BackgroundColor = "Black"
     Clear-Host
     while (-not (Should-Stop)) {
+        Should-Pause
         $line = -join ((0..80) | % { if((Get-Random -Max 5) -eq 0) { [char](Get-Random -Min 33 -Max 126) } else { " " } })
         Write-Host $line -ForegroundColor Green
         Start-Sleep -Milliseconds 50
@@ -240,6 +728,7 @@ function Run-Map {
         "       . . . . . . . . . . . . . . . . . . . . . . . . . . . . . ."
     )
     while (-not (Should-Stop)) {
+        Should-Pause
         Clear-Host
         Write-Host "`n  [ GLOBAL INFECTION TRACKER ]" -ForegroundColor Cyan
         foreach ($line in $map) {
@@ -258,6 +747,7 @@ function Run-Map {
 function Run-Hex {
     $host.UI.RawUI.WindowTitle = "MEMORY_DUMP_0x$(Get-Random)"
     while (-not (Should-Stop)) {
+        Should-Pause
         $offset = "0x{0:X8}" -f (Get-Random -Max 2147483647)
         $hex = -join (1..16 | % { "{0:X2} " -f (Get-Random -Max 255) })
         Write-Host "$offset  $hex" -ForegroundColor DarkGreen
@@ -281,6 +771,7 @@ function Run-Chat {
         "Deleting System32..."
     )
     while (-not (Should-Stop)) {
+        Should-Pause
         Clear-Host
         Write-Host "`n  [ OMEGA AI ]" -ForegroundColor Red
         Write-Host "  --------------------------------" -ForegroundColor DarkRed
