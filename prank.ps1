@@ -315,26 +315,26 @@ function Show-Educational {
 
     if (-not $EducationalMode) { return }
 
-    Write-Host "`n╔════════════════════════════════════════════════════════════════╗" -ForegroundColor Blue
-    Write-Host "║ [!] TRAINING NOTE: $($title.PadRight(42)) ║" -ForegroundColor Cyan
-    Write-Host "╠════════════════════════════════════════════════════════════════╣" -ForegroundColor Blue
+    Write-Host "`n+================================================================+" -ForegroundColor Blue
+    Write-Host "| [!] TRAINING NOTE: $($title.PadRight(42)) |" -ForegroundColor Cyan
+    Write-Host "+================================================================+" -ForegroundColor Blue
 
     # Word wrap the message
     $words = $message -split ' '
-    $line = "║ "
+    $line = "| "
     foreach ($word in $words) {
         if (($line.Length + $word.Length) -gt 61) {
-            Write-Host ($line.PadRight(63) + "║") -ForegroundColor White
-            $line = "║ $word "
+            Write-Host ($line.PadRight(63) + "|") -ForegroundColor White
+            $line = "| $word "
         } else {
             $line += "$word "
         }
     }
     if ($line.Length -gt 2) {
-        Write-Host ($line.PadRight(63) + "║") -ForegroundColor White
+        Write-Host ($line.PadRight(63) + "|") -ForegroundColor White
     }
 
-    Write-Host "╚════════════════════════════════════════════════════════════════╝" -ForegroundColor Blue
+    Write-Host "+================================================================+" -ForegroundColor Blue
     Start-Sleep -Seconds 3
 }
 
@@ -395,8 +395,8 @@ function Show-HackProgress {
             $width = 50
             $filled = [math]::Floor(($progress / 100) * $width)
             $empty = $width - $filled
-            $bar = "█" * $filled
-            $space = "░" * $empty
+            $bar = "#" * $filled
+            $space = "." * $empty
 
             Write-Host "`r  $bar$space $progress% - $($step.msg)" -NoNewline -ForegroundColor $color
             if ((Get-Random -Max 10) -eq 0) { Play-Sound "scanning" }
@@ -404,7 +404,7 @@ function Show-HackProgress {
         }
     }
 
-    Write-Host "`r  $('█' * 50) 100% ✓ COMPLETE                    " -ForegroundColor Green
+    Write-Host "`r  $('#' * 50) 100% [+] COMPLETE                    " -ForegroundColor Green
     Play-Sound "success"
 }
 
@@ -414,11 +414,11 @@ function Show-SystemAlert {
     $padding = [math]::Floor(($width - $message.Length) / 2)
     $padStr = " " * $padding
     Write-Host "`n"
-    Write-Host "  ╔$([string]('═' * $width))╗" -ForegroundColor $color
-    Write-Host "  ║$([string](' ' * $width))║" -ForegroundColor $color
-    Write-Host "  ║$padStr$message$padStr ║" -ForegroundColor White -BackgroundColor $color
-    Write-Host "  ║$([string](' ' * $width))║" -ForegroundColor $color
-    Write-Host "  ╚$([string]('═' * $width))╝" -ForegroundColor $color
+    Write-Host "  +$([string]('=' * $width))+" -ForegroundColor $color
+    Write-Host "  |$([string](' ' * $width))|" -ForegroundColor $color
+    Write-Host "  |$padStr$message$padStr |" -ForegroundColor White -BackgroundColor $color
+    Write-Host "  |$([string](' ' * $width))|" -ForegroundColor $color
+    Write-Host "  +$([string]('=' * $width))+" -ForegroundColor $color
     Play-Sound "alert"
     Start-Sleep -Milliseconds 500
 }
@@ -638,7 +638,7 @@ function Run-DataExfil {
             $percent = [math]::Round(($i / $chunks) * 100)
             $filled = [math]::Floor($i)
             $empty = $chunks - $filled
-            $bar = "█" * $filled + "░" * $empty
+            $bar = "#" * $filled + "." * $empty
 
             $speed = Get-Random -Min 800 -Max 2500
             Write-Host "`r  $bar $percent% ($speed KB/s)" -NoNewline -ForegroundColor Green
@@ -647,7 +647,7 @@ function Run-DataExfil {
             Start-Sleep -Milliseconds (Get-Random -Min 200 -Max 500)
         }
 
-        Write-Host "`n  ✓ Upload complete - File staged for extraction`n" -ForegroundColor Green
+        Write-Host "`n  [+] Upload complete - File staged for extraction`n" -ForegroundColor Green
         Play-Sound "success"
 
         Start-Sleep -Seconds 2
