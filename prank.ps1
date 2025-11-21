@@ -12,6 +12,25 @@ param([switch]$child, [switch]$master, [int]$generation = 0)
 $global:flagFile = "$env:TEMP\cyberApocalypseFlag.tmp"
 $global:processTracker = "$env:TEMP\cyberApocalypseProcs.txt"
 
+# Window Moving Magic (Windows Only)
+try {
+    $windowCode = @"
+    using System;
+    using System.Runtime.InteropServices;
+    public class PrankWindowManager {
+        [DllImport("kernel32.dll")]
+        public static extern IntPtr GetConsoleWindow();
+        [DllImport("user32.dll")]
+        public static extern bool MoveWindow(IntPtr hWnd, int X, int Y, int nWidth, int nHeight, bool bRepaint);
+        [DllImport("user32.dll")]
+        public static extern bool GetWindowRect(IntPtr hWnd, out RECT lpRect);
+        [StructLayout(LayoutKind.Sequential)]
+        public struct RECT { public int Left; public int Top; public int Right; public int Bottom; }
+    }
+"@
+    Add-Type -TypeDefinition $windowCode -Language CSharp -ErrorAction SilentlyContinue
+} catch {}
+
 # Multiple ASCII Banners
 $banners = @(
 @"
@@ -433,43 +452,22 @@ function Show-BootSequence {
     Start-Sleep -Seconds 1
 }
 
-# ============================================================================
-# MAIN EXECUTION
-# ============================================================================
-
-# Launcher: Spawn Master in new window and exit
-if (-not $child -and -not $master) {
-    Start-Process powershell -ArgumentList "-ExecutionPolicy Bypass -NoExit -WindowStyle Normal -File `"$PSCommandPath`" -master"
-    exit
+function Move-CurrentWindow {
+    try {
+        $hwnd = [PrankWindowManager]::GetConsoleWindow()
+        $rect = New-Object PrankWindowManager+RECT
+        [PrankWindowManager]::GetWindowRect($hwnd, [ref]$rect)
+        
+        $w = $rect.Right - $rect.Left
+        $h = $rect.Bottom - $rect.Top
+        
+        $x = Get-Random -Min 0 -Max (1920 - $w)
+        $y = Get-Random -Min 0 -Max (1080 - $h)
+        
+        [PrankWindowManager]::MoveWindow($hwnd, $x, $y, $w, $h, $true)
+    } catch {}
 }
 
-Register-Process
-Clear-Host
-
-if ($master) {
-    # PARENT WINDOW - Master Controller
-    Show-BootSequence
-
-    $banner = Get-Random $banners
-    Write-Host $banner -ForegroundColor Red
-    Write-Host "`n"
-    Type-Text "  ⚡ INITIALIZING MULTI-VECTOR CYBER ATTACK ⚡" "Red" 25 -glitch
-    Type-Text "  ⚡ SPAWNING DISTRIBUTED ATTACK NODES... ⚡" "Yellow" 25
-    Type-Text "  ⚡ PERSISTENCE MODE: ULTRA AGGRESSIVE ⚡" "Magenta" 25
-    Write-Host "`n"
-
-    Show-Matrix -lines 8 -intense
-    Write-Host "`n"
-
-    # Start the window monitor that will spawn and respawn children
-    Start-WindowMonitor
-
-    Type-Text "  ✓ ATTACK VECTORS DEPLOYED AND MONITORED" "Green" 20
-    Type-Text "  ✓ AUTO-RESPAWN ENABLED - RESISTANCE IS FUTILE" "Green" 20
-    Write-Host "`n"
-    Show-Glitch -intensity 3
-    Start-Sleep -Seconds 2
-}
 
 # Start password listener
 Start-PasswordListener
@@ -481,6 +479,7 @@ Start-PasswordListener
 $loopCount = 0
 while (-not (Should-Stop)) {
     $loopCount++
+    Move-CurrentWindow
     Clear-Host
 
     # Random banner each time
