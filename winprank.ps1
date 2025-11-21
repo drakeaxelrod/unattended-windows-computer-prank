@@ -840,6 +840,10 @@ function Run-Chat {
 }
 
 function Run-Master {
+    # Immediate visual feedback that Master is starting
+    Write-Host "Master module starting..." -ForegroundColor Green
+    Start-Sleep -Milliseconds 500
+
     $host.UI.RawUI.WindowTitle = "SYSTEM_ROOT"
     Start-Safety-Net
 
@@ -1156,13 +1160,15 @@ if (-not $CurrentScript -or -not (Test-Path $CurrentScript -ErrorAction Silently
 
     # 2. Download the script content to this file
     # (Using the URL provided for the raw script)
-    $SelfUrl = "https://github.com/drakeaxelrod/unattended-windows-computer-prank/raw/refs/heads/main/prank.ps1"
+    $SelfUrl = "https://github.com/drakeaxelrod/unattended-computer-pranks/raw/refs/heads/main/winprank.ps1"
 
     try {
         # Write-Host "Initializing Prank Protocol..." -ForegroundColor DarkGray
         Invoke-WebRequest -Uri $SelfUrl -OutFile $CurrentScript -UseBasicParsing
     } catch {
         Write-Host "Error: Could not retrieve payload. Check internet connection." -ForegroundColor Red
+        Write-Host "Error details: $_" -ForegroundColor Red
+        Read-Host "Press Enter to exit"
         exit
     }
 }
@@ -1170,17 +1176,35 @@ if (-not $CurrentScript -or -not (Test-Path $CurrentScript -ErrorAction Silently
 # REMOVED: Start-Safety-Net (It was causing issues and is now integrated into Should-Stop)
 
 if ($Module -eq "Launcher") {
-    # Show consent screen if requested
-    if ($ShowConsent) {
-        Show-Consent
+    # Always show consent screen for security awareness training
+    Show-Consent
+
+    # Verify script path exists before launching
+    if (-not (Test-Path $CurrentScript)) {
+        Write-Host "`nERROR: Script file not found at: $CurrentScript" -ForegroundColor Red
+        Read-Host "Press Enter to exit"
+        exit 1
     }
+
+    Write-Host "`nLaunching attack simulation..." -ForegroundColor Yellow
+    Start-Sleep -Seconds 1
 
     # Initial Launch - Force New Window using CMD START
     $intensityArg = "-Intensity `"$Intensity`""
     $modeArg = "-Mode `"$Mode`""
     $eduArg = if ($EducationalMode) { "-EducationalMode" } else { "" }
     $cmdArgs = "/c start `"CyberApocalypse`" powershell -ExecutionPolicy Bypass -NoExit -WindowStyle Normal -File `"$CurrentScript`" -Module Master $intensityArg $modeArg $eduArg"
-    Start-Process cmd -ArgumentList $cmdArgs -WindowStyle Hidden
+
+    try {
+        Start-Process cmd -ArgumentList $cmdArgs -WindowStyle Hidden -ErrorAction Stop
+        Write-Host "Master control window launched successfully." -ForegroundColor Green
+        Start-Sleep -Seconds 2
+    } catch {
+        Write-Host "`nERROR: Failed to launch master window: $_" -ForegroundColor Red
+        Read-Host "Press Enter to exit"
+        exit 1
+    }
+
     exit
 }
 
