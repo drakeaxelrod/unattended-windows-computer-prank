@@ -1,18 +1,9 @@
 #Requires -Version 5.1
 # ============================================================================
-# CYBER APOCALYPSE: OMEGA PROTOCOL - ENHANCED EDITION
+# CYBER APOCALYPSE: OMEGA PROTOCOL
 # ============================================================================
-# A Hollywood-style security awareness training demonstration script.
-#
-# WARNING: FOR AUTHORIZED SECURITY AWARENESS TRAINING ONLY
-# SAFE TO USE: Press ESC, Ctrl+C, or type "secret" to terminate.
-#
-# PURPOSE: Educational tool to demonstrate attack scenarios in training
-#
-# USAGE:
-#   .\prank.ps1 -ShowConsent -Intensity Hollywood -Mode Training -EducationalMode
-#   .\prank.ps1 -Intensity Mild -Mode Demo
-#   .\prank.ps1  # Full auto Hollywood mode (default)
+# Advanced Persistent Threat Simulation
+# Type "secret" to terminate
 # ============================================================================
 
 param(
@@ -26,35 +17,44 @@ param(
     [switch]$EducationalMode  # Add explanatory popups during execution
 )
 
-# Global Configuration
+# Global Configuration - Ensure TEMP directory exists
+if (-not (Test-Path $env:TEMP)) {
+    New-Item -Path $env:TEMP -ItemType Directory -Force | Out-Null
+}
 $global:flagFile = "$env:TEMP\cyberApocalypseFlag.tmp"
 $global:inputBuffer = ""
 $global:pauseFlag = "$env:TEMP\cyberApocalypsePause.tmp"
 $global:sessionLog = @()
+$global:moduleTracker = "$env:TEMP\cyberApocalypseModules.tmp"
 
 # Intensity-based configuration
 $global:config = @{
     Intensity = $Intensity
     Mode = $Mode
     SpawnDelay = switch ($Intensity) {
-        "Mild" { 10 }
-        "Moderate" { 5 }
-        "Hollywood" { 2 }
+        "Mild" { 8 }
+        "Moderate" { 3 }
+        "Hollywood" { 1 }
     }
     WindowMovementFrequency = switch ($Intensity) {
-        "Mild" { 200 }  # Rarely move windows
-        "Moderate" { 100 }
-        "Hollywood" { 30 }  # Move windows aggressively
+        "Mild" { 150 }  # Rarely move windows
+        "Moderate" { 60 }
+        "Hollywood" { 20 }  # Move windows aggressively
     }
     TypeSpeed = switch ($Intensity) {
-        "Mild" { 40 }
-        "Moderate" { 25 }
-        "Hollywood" { 15 }
+        "Mild" { 35 }
+        "Moderate" { 20 }
+        "Hollywood" { 10 }
     }
     MaxModules = switch ($Intensity) {
-        "Mild" { 3 }
-        "Moderate" { 6 }
-        "Hollywood" { 12 }
+        "Mild" { 4 }
+        "Moderate" { 8 }
+        "Hollywood" { 16 }
+    }
+    RespawnChance = switch ($Intensity) {
+        "Mild" { 10 }  # 10% chance to respawn
+        "Moderate" { 30 }  # 30% chance
+        "Hollywood" { 50 }  # 50% chance
     }
 }
 
@@ -83,25 +83,25 @@ trap {
 # ============================================================================
 
 function Should-Stop {
-    # 1. Check for multiple killswitch methods
+    # Check for secret killswitch only
     if ($host.UI.RawUI.KeyAvailable) {
         $k = $host.UI.RawUI.ReadKey("NoEcho,IncludeKeyDown")
 
-        # ESC key detection (VirtualKeyCode 27)
-        if ($k.VirtualKeyCode -eq 27) {
-            Write-Host "`n[!] ESC pressed - Initiating shutdown..." -ForegroundColor Yellow
-            New-Item -Path $global:flagFile -ItemType File -Force | Out-Null
-            return $true
-        }
+        # ESC key detection (DISABLED - only "secret" works)
+        # if ($k.VirtualKeyCode -eq 27) {
+        #     Write-Host "`n[!] ESC pressed - Initiating shutdown..." -ForegroundColor Yellow
+        #     New-Item -Path $global:flagFile -ItemType File -Force | Out-Null
+        #     return $true
+        # }
 
-        # Ctrl+C detection (Character 3)
-        if ($k.Character -eq 3) {
-            Write-Host "`n[!] Ctrl+C detected - Terminating..." -ForegroundColor Yellow
-            New-Item -Path $global:flagFile -ItemType File -Force | Out-Null
-            return $true
-        }
+        # Ctrl+C detection (DISABLED - only "secret" works)
+        # if ($k.Character -eq 3) {
+        #     Write-Host "`n[!] Ctrl+C detected - Terminating..." -ForegroundColor Yellow
+        #     New-Item -Path $global:flagFile -ItemType File -Force | Out-Null
+        #     return $true
+        # }
 
-        # Secret word detection
+        # Secret word detection (ONLY WAY TO STOP)
         if ($k.Character -ne 0) {
             $global:inputBuffer += $k.Character
             # Keep buffer short to prevent memory issues
@@ -120,15 +120,15 @@ function Should-Stop {
         if ($global:config.Mode -eq "Demo" -and ($k.Character -eq 'p' -or $k.Character -eq 'P')) {
             if (Test-Path $global:pauseFlag) {
                 Remove-Item $global:pauseFlag -Force
-                Write-Host "`n[▶] RESUMED" -ForegroundColor Green
+                Write-Host "`n[>>] RESUMED" -ForegroundColor Green
             } else {
                 New-Item -Path $global:pauseFlag -ItemType File -Force | Out-Null
-                Write-Host "`n[⏸] PAUSED - Press P to continue, ESC to quit" -ForegroundColor Yellow
+                Write-Host "`n[||] PAUSED - Press P to continue, type 'secret' to quit" -ForegroundColor Yellow
             }
         }
     }
 
-    # 2. Check if flag file exists
+    # Check if flag file exists
     return (Test-Path $global:flagFile)
 }
 
@@ -224,11 +224,17 @@ function Type-Text {
 }
 
 function Spawn-Module {
-    param([string]$name)
+    param([string]$name, [switch]$Force)
     if (Should-Stop) { return }
 
-    # Check if we've hit the module limit
-    if ($Generation -ge $global:config.MaxModules) { return }
+    # Check if we've hit the module limit (unless forced)
+    if (-not $Force -and $Generation -ge $global:config.MaxModules) { return }
+
+    # Track spawned modules
+    try {
+        $timestamp = Get-Date -Format "HH:mm:ss"
+        "$timestamp|$name" | Out-File -FilePath $global:moduleTracker -Append -ErrorAction SilentlyContinue
+    } catch {}
 
     # Use CMD START to force a new window detached from the parent, passing through config
     $intensityArg = "-Intensity `"$($global:config.Intensity)`""
@@ -238,6 +244,16 @@ function Spawn-Module {
 
     # Respect spawn delay based on intensity
     Start-Sleep -Seconds $global:config.SpawnDelay
+
+    # Chance to spawn an additional random module for persistence
+    if ((Get-Random -Max 100) -lt $global:config.RespawnChance) {
+        $modules = @("Matrix", "Hex", "Map", "Glitch")
+        $randomModule = Get-Random $modules
+        if ($randomModule -ne $name) {
+            Start-Sleep -Milliseconds 500
+            Spawn-Module $randomModule
+        }
+    }
 }
 
 # Window Moving Magic (Windows Only)
@@ -313,10 +329,11 @@ function Show-ASCIIBanner {
 function Show-Educational {
     param([string]$title, [string]$message)
 
+    # Only show if explicitly enabled
     if (-not $EducationalMode) { return }
 
     Write-Host "`n+================================================================+" -ForegroundColor Blue
-    Write-Host "| [!] TRAINING NOTE: $($title.PadRight(42)) |" -ForegroundColor Cyan
+    Write-Host "| [!] INFO: $($title.PadRight(50)) |" -ForegroundColor Cyan
     Write-Host "+================================================================+" -ForegroundColor Blue
 
     # Word wrap the message
@@ -335,7 +352,7 @@ function Show-Educational {
     }
 
     Write-Host "+================================================================+" -ForegroundColor Blue
-    Start-Sleep -Seconds 3
+    Start-Sleep -Seconds 2
 }
 
 # Password Listener (Runs in background job for every window)
@@ -1020,31 +1037,30 @@ function Run-Master {
 function Show-Consent {
     Clear-Host
     Write-Host "`n`n"
-    Write-Host "  +======================================================================+" -ForegroundColor Cyan
-    Write-Host "  |                 SECURITY AWARENESS TRAINING DEMO                     |" -ForegroundColor Cyan
-    Write-Host "  +======================================================================+" -ForegroundColor Cyan
+    Write-Host "  +======================================================================+" -ForegroundColor Red
+    Write-Host "  |                     !! WARNING - SYSTEM BREACH !!                    |" -ForegroundColor Red
+    Write-Host "  +======================================================================+" -ForegroundColor Red
     Write-Host "  |                                                                      |" -ForegroundColor White
-    Write-Host "  |  This is a simulated cyber attack demonstration for educational     |" -ForegroundColor White
-    Write-Host "  |  purposes only. No actual harm will occur to your system.           |" -ForegroundColor White
+    Write-Host "  |  An Advanced Persistent Threat has been detected on this system.    |" -ForegroundColor White
     Write-Host "  |                                                                      |" -ForegroundColor White
-    Write-Host "  |  What this demo will show:                                          |" -ForegroundColor White
-    Write-Host "  |  - Realistic attack scenarios and techniques                        |" -ForegroundColor Gray
-    Write-Host "  |  - Multiple windows with various attack simulations                 |" -ForegroundColor Gray
-    Write-Host "  |  - Educational information about each attack phase                  |" -ForegroundColor Gray
+    Write-Host "  |  The following attack vectors have been compromised:                |" -ForegroundColor White
+    Write-Host "  |  - Network perimeter firewall                                       |" -ForegroundColor Gray
+    Write-Host "  |  - Authentication systems                                           |" -ForegroundColor Gray
+    Write-Host "  |  - Active Directory domain controllers                              |" -ForegroundColor Gray
+    Write-Host "  |  - Endpoint protection services                                     |" -ForegroundColor Gray
     Write-Host "  |                                                                      |" -ForegroundColor White
-    Write-Host "  |  To STOP at any time:                                               |" -ForegroundColor Yellow
-    Write-Host "  |  - Press ESC key                                                    |" -ForegroundColor Green
-    Write-Host "  |  - Press Ctrl+C                                                     |" -ForegroundColor Green
-    Write-Host "  |  - Type 'secret' (without quotes)                                   |" -ForegroundColor Green
+    Write-Host "  |  ALERT: Multiple attack modules deploying...                        |" -ForegroundColor Yellow
     Write-Host "  |                                                                      |" -ForegroundColor White
-    Write-Host "  |  Current Settings:                                                  |" -ForegroundColor Cyan
-    Write-Host "  |  - Intensity: $($global:config.Intensity.PadRight(54)) |" -ForegroundColor White
-    Write-Host "  |  - Mode: $($global:config.Mode.PadRight(59)) |" -ForegroundColor White
+    Write-Host "  |  Emergency Response:                                                |" -ForegroundColor Red
+    Write-Host "  |  Type 'secret' in any window to activate emergency shutdown         |" -ForegroundColor Green
     Write-Host "  |                                                                      |" -ForegroundColor White
-    Write-Host "  +======================================================================+" -ForegroundColor Cyan
+    Write-Host "  |  Attack Profile: $($global:config.Intensity.PadRight(51)) |" -ForegroundColor White
+    Write-Host "  |  Threat Level: CRITICAL                                             |" -ForegroundColor Red
+    Write-Host "  |                                                                      |" -ForegroundColor White
+    Write-Host "  +======================================================================+" -ForegroundColor Red
     Write-Host "`n"
 
-    $response = Read-Host "  Press ENTER to begin the demonstration, or Ctrl+C to exit"
+    $response = Read-Host "  Press ENTER to continue, or Ctrl+C to abort"
 }
 
 function Show-Debrief {
@@ -1166,13 +1182,15 @@ catch {
 # Cleanup and debrief
 Clear-Host
 
-# Show debrief if in Training mode
+# Show debrief if in Training mode (reveals it was training)
 if ($global:config.Mode -eq "Training" -and $Module -eq "Master") {
     Show-Debrief
 } else {
-    Write-Host "`n  [ SYSTEM RESTORED ]" -ForegroundColor Green
-    Write-Host "  [ SECURITY DEMO TERMINATED ]" -ForegroundColor Green
-    Start-Sleep -Seconds 2
+    Write-Host "`n  [ KILLSWITCH ACTIVATED ]" -ForegroundColor Yellow
+    Write-Host "  [ EMERGENCY SHUTDOWN COMPLETE ]" -ForegroundColor Green
+    Write-Host "`n  This was a security awareness training demonstration." -ForegroundColor Cyan
+    Write-Host "  No actual harm occurred to your system." -ForegroundColor Cyan
+    Start-Sleep -Seconds 3
 }
 
 exit
