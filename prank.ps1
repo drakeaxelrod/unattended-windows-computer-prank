@@ -49,7 +49,8 @@ function Type-Text {
 function Spawn-Module {
     param([string]$name)
     if (Should-Stop) { return }
-    Start-Process conhost.exe -ArgumentList "powershell.exe -ExecutionPolicy Bypass -NoExit -WindowStyle Normal -File `"$PSCommandPath`" -Module $name -Generation $($Generation + 1)"
+    # Use CMD START to force a new window detached from the parent
+    Start-Process cmd -ArgumentList "/c start `"$name`" powershell -ExecutionPolicy Bypass -NoExit -WindowStyle Normal -File `"$PSCommandPath`" -Module $name -Generation $($Generation + 1)" -WindowStyle Hidden
 }
 
 # Window Moving Magic (Windows Only)
