@@ -1,3 +1,4 @@
+#Requires -Version 5.1
 # ============================================================================
 # CYBER APOCALYPSE: OMEGA PROTOCOL - ENHANCED EDITION
 # ============================================================================
@@ -7,6 +8,11 @@
 # SAFE TO USE: Press ESC, Ctrl+C, or type "secret" to terminate.
 #
 # PURPOSE: Educational tool to demonstrate attack scenarios in training
+#
+# USAGE:
+#   .\prank.ps1 -ShowConsent -Intensity Hollywood -Mode Training -EducationalMode
+#   .\prank.ps1 -Intensity Mild -Mode Demo
+#   .\prank.ps1  # Full auto Hollywood mode (default)
 # ============================================================================
 
 param(
@@ -611,14 +617,14 @@ function Run-DataExfil {
         $target = Get-Random $dataTypes
         $server = Get-Random $c2Servers
 
-        Write-Host "  📁 File: " -NoNewline -ForegroundColor Cyan
+        Write-Host "  [F] File: " -NoNewline -ForegroundColor Cyan
         Write-Host $target.name -ForegroundColor Yellow
-        Write-Host "  📊 Size: " -NoNewline -ForegroundColor Cyan
+        Write-Host "  [=] Size: " -NoNewline -ForegroundColor Cyan
         Write-Host $target.size -ForegroundColor White
-        Write-Host "  ⚠️  Sensitivity: " -NoNewline -ForegroundColor Cyan
+        Write-Host "  [!] Sensitivity: " -NoNewline -ForegroundColor Cyan
         $sensColor = if ($target.sensitivity -eq "CRITICAL") { "Red" } elseif ($target.sensitivity -eq "HIGH") { "Yellow" } else { "White" }
         Write-Host $target.sensitivity -ForegroundColor $sensColor
-        Write-Host "  🌐 C2 Server: " -NoNewline -ForegroundColor Cyan
+        Write-Host "  [C] C2 Server: " -NoNewline -ForegroundColor Cyan
         Write-Host $server -ForegroundColor Magenta
 
         Write-Host ""
@@ -672,7 +678,7 @@ function Run-Infection {
             $pc = Get-Random $fakeComputers
             $msg = Get-Random $messages
             Write-Host "`n  ╔════════════════════════════════════════════════════════════════╗" -ForegroundColor Red
-            Write-Host ("  ║ ⚠️  INFECTION SPREADING - NODES COMPROMISED: {0,-15} ║" -f "$remaining") -ForegroundColor Yellow
+            Write-Host ("  ║ [!] INFECTION SPREADING - NODES COMPROMISED: {0,-15} ║" -f "$remaining") -ForegroundColor Yellow
             Write-Host "  ╚════════════════════════════════════════════════════════════════╝" -ForegroundColor Red
             Write-Host ("    ► TARGET NODE: {0}" -f $pc) -ForegroundColor Cyan
             Write-Host ("    ► STATUS: {0}" -f $msg) -ForegroundColor Magenta
@@ -1116,33 +1122,57 @@ if (-not $CurrentScript -or -not (Test-Path $CurrentScript -ErrorAction Silently
 # REMOVED: Start-Safety-Net (It was causing issues and is now integrated into Should-Stop)
 
 if ($Module -eq "Launcher") {
-    # Initial Launch - Force New Window using CMD START (Nuclear Option for Detaching)
-    # We use the resolved $CurrentScript path which now definitely exists on disk.
-    # Changed WindowStyle to Normal to avoid "Maximized" movement glitches.
-    Start-Process cmd -ArgumentList "/c start `"CyberApocalypse`" powershell -ExecutionPolicy Bypass -NoExit -WindowStyle Normal -File `"$CurrentScript`" -Module Master" -WindowStyle Hidden
+    # Show consent screen if requested
+    if ($ShowConsent) {
+        Show-Consent
+    }
+
+    # Initial Launch - Force New Window using CMD START
+    $intensityArg = "-Intensity `"$Intensity`""
+    $modeArg = "-Mode `"$Mode`""
+    $eduArg = if ($EducationalMode) { "-EducationalMode" } else { "" }
+    $cmdArgs = "/c start `"CyberApocalypse`" powershell -ExecutionPolicy Bypass -NoExit -WindowStyle Normal -File `"$CurrentScript`" -Module Master $intensityArg $modeArg $eduArg"
+    Start-Process cmd -ArgumentList $cmdArgs -WindowStyle Hidden
     exit
 }
 
 try {
-    # Remove the old Start-Safety-Net call as it's now integrated into Should-Stop
-    # Start-Safety-Net
-
-    if ($Module -eq "Master") { Run-Master }
-    elseif ($Module -eq "Matrix") { Run-Matrix }
-    elseif ($Module -eq "Map") { Run-Map }
-    elseif ($Module -eq "Hex") { Run-Hex }
-    elseif ($Module -eq "Chat") { Run-Chat }
-    elseif ($Module -eq "Infection") { Run-Infection }
-    elseif ($Module -eq "Glitch") { Run-Glitch }
+    # Main module dispatcher
+    switch ($Module) {
+        "Master" { Run-Master }
+        "Matrix" { Run-Matrix }
+        "Map" { Run-Map }
+        "Hex" { Run-Hex }
+        "Chat" { Run-Chat }
+        "Infection" { Run-Infection }
+        "Glitch" { Run-Glitch }
+        "Ransomware" { Run-Ransomware }
+        "Keylogger" { Run-Keylogger }
+        "LateralMovement" { Run-LateralMovement }
+        "DataExfil" { Run-DataExfil }
+        default {
+            Write-Host "Unknown module: $Module" -ForegroundColor Red
+            Read-Host "Press Enter to exit..."
+            exit
+        }
+    }
 }
 catch {
     Write-Host "CRITICAL ERROR: $_" -ForegroundColor Red
+    Write-Host "At Line: $($_.InvocationInfo.ScriptLineNumber)" -ForegroundColor Red
     Read-Host "Press Enter to exit..."
 }
 
-# Cleanup if stopped
+# Cleanup and debrief
 Clear-Host
-Write-Host "`n  [ SYSTEM RESTORED ]" -ForegroundColor Green
-Write-Host "  [ PRANK TERMINATED ]" -ForegroundColor Green
-Start-Sleep -Seconds 2
+
+# Show debrief if in Training mode
+if ($global:config.Mode -eq "Training" -and $Module -eq "Master") {
+    Show-Debrief
+} else {
+    Write-Host "`n  [ SYSTEM RESTORED ]" -ForegroundColor Green
+    Write-Host "  [ SECURITY DEMO TERMINATED ]" -ForegroundColor Green
+    Start-Sleep -Seconds 2
+}
+
 exit
