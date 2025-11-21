@@ -310,7 +310,7 @@ function Show-Educational {
     if (-not $EducationalMode) { return }
 
     Write-Host "`n╔════════════════════════════════════════════════════════════════╗" -ForegroundColor Blue
-    Write-Host "║ 📚 TRAINING NOTE: $($title.PadRight(44)) ║" -ForegroundColor Cyan
+    Write-Host "║ [!] TRAINING NOTE: $($title.PadRight(42)) ║" -ForegroundColor Cyan
     Write-Host "╠════════════════════════════════════════════════════════════════╣" -ForegroundColor Blue
 
     # Word wrap the message
@@ -451,11 +451,11 @@ function Run-Ransomware {
 
         # Countdown timer
         $timeLeft = 300 - (Get-Random -Max 150)
-        Write-Host "`n  ⏰ Time until files are permanently deleted: " -NoNewline -ForegroundColor Yellow
+        Write-Host "`n  [!] Time until files are permanently deleted: " -NoNewline -ForegroundColor Yellow
         Write-Host "$($timeLeft) seconds" -ForegroundColor Red -BackgroundColor Black
         Play-Sound "countdown"
 
-        Write-Host "`n  📊 Encryption Progress:`n" -ForegroundColor Cyan
+        Write-Host "`n  [=] Encryption Progress:`n" -ForegroundColor Cyan
 
         # Simulate file encryption
         foreach ($i in 1..8) {
@@ -473,8 +473,8 @@ function Run-Ransomware {
             Start-Sleep -Milliseconds 800
         }
 
-        Write-Host "`n  💰 Bitcoin Address: 1A1zP1eP5QGefi2DMPTfTL5SLmv7DivfNa" -ForegroundColor Yellow
-        Write-Host "  📧 Contact: decrypt@evilhackers.onion`n" -ForegroundColor Yellow
+        Write-Host "`n  [$] Bitcoin Address: 1A1zP1eP5QGefi2DMPTfTL5SLmv7DivfNa" -ForegroundColor Yellow
+        Write-Host "  [@] Contact: decrypt@evilhackers.onion`n" -ForegroundColor Yellow
 
         Start-Sleep -Seconds 3
         Move-Window-Random
@@ -514,7 +514,7 @@ function Run-Keylogger {
             Start-Sleep -Milliseconds (Get-Random -Min 300 -Max 800)
         }
 
-        Write-Host "`n  📡 Uploading captured data to C2 server..." -ForegroundColor Red
+        Write-Host "`n  [^] Uploading captured data to C2 server..." -ForegroundColor Red
         Start-Sleep -Seconds 2
 
         if ((Get-Random -Max 20) -eq 0) { Move-Window-Random }
@@ -548,7 +548,7 @@ function Run-LateralMovement {
         Clear-Host
 
         Write-Host "`n  ═══════════════════════════════════════════════════════" -ForegroundColor Cyan
-        Write-Host "  🌐 NETWORK PENETRATION - LATERAL MOVEMENT IN PROGRESS" -ForegroundColor Yellow
+        Write-Host "  [*] NETWORK PENETRATION - LATERAL MOVEMENT IN PROGRESS" -ForegroundColor Yellow
         Write-Host "  ═══════════════════════════════════════════════════════`n" -ForegroundColor Cyan
 
         foreach ($node in $network) {
@@ -570,7 +570,7 @@ function Run-LateralMovement {
             Write-Host $node.role -ForegroundColor Gray
         }
 
-        Write-Host "`n  🎯 Current Technique: " -NoNewline -ForegroundColor Cyan
+        Write-Host "`n  [>] Current Technique: " -NoNewline -ForegroundColor Cyan
         Write-Host (Get-Random $techniques) -ForegroundColor Red
 
         Show-HackProgress "EXPLOITING $(Get-Random $network).name" "Red" -fast -realistic
@@ -689,7 +689,9 @@ function Run-Glitch {
         $intensity = Get-Random -Min 5 -Max 20
         for ($i = 0; $i -lt $intensity; $i++) {
             if (Should-Stop) { return }
-            $glitchText = -join ((0..120) | ForEach-Object { Get-Random -InputObject @('█', '▓', '▒', '░', '/', '\', '|', '-', 'X', '⚡', '☠', '☢') })
+            # Using ASCII-safe characters to avoid encoding issues
+            $glitchChars = @('#', '@', '%', '&', '*', '/', '\', '|', '-', '+', '=', 'X', '0', '1')
+            $glitchText = -join ((0..120) | ForEach-Object { Get-Random -InputObject $glitchChars })
             $bg = Get-Random -InputObject @('Black', 'DarkRed', 'DarkBlue', 'DarkMagenta')
             $fg = Get-Random $global:colors
             Write-Host $glitchText -ForegroundColor $fg -BackgroundColor $bg
