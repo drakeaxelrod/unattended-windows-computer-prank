@@ -1006,6 +1006,78 @@ function Run-Master {
 }
 
 # ============================================================================
+# CONSENT & DEBRIEF FUNCTIONS
+# ============================================================================
+
+function Show-Consent {
+    Clear-Host
+    Write-Host "`n`n"
+    Write-Host "  ╔══════════════════════════════════════════════════════════════════════╗" -ForegroundColor Cyan
+    Write-Host "  ║                 SECURITY AWARENESS TRAINING DEMO                     ║" -ForegroundColor Cyan
+    Write-Host "  ╠══════════════════════════════════════════════════════════════════════╣" -ForegroundColor Cyan
+    Write-Host "  ║                                                                      ║" -ForegroundColor White
+    Write-Host "  ║  This is a simulated cyber attack demonstration for educational     ║" -ForegroundColor White
+    Write-Host "  ║  purposes only. No actual harm will occur to your system.           ║" -ForegroundColor White
+    Write-Host "  ║                                                                      ║" -ForegroundColor White
+    Write-Host "  ║  What this demo will show:                                          ║" -ForegroundColor White
+    Write-Host "  ║  • Realistic attack scenarios and techniques                        ║" -ForegroundColor Gray
+    Write-Host "  ║  • Multiple windows with various attack simulations                 ║" -ForegroundColor Gray
+    Write-Host "  ║  • Educational information about each attack phase                  ║" -ForegroundColor Gray
+    Write-Host "  ║                                                                      ║" -ForegroundColor White
+    Write-Host "  ║  To STOP at any time:                                               ║" -ForegroundColor Yellow
+    Write-Host "  ║  • Press ESC key                                                    ║" -ForegroundColor Green
+    Write-Host "  ║  • Press Ctrl+C                                                     ║" -ForegroundColor Green
+    Write-Host "  ║  • Type 'secret' (without quotes)                                   ║" -ForegroundColor Green
+    Write-Host "  ║                                                                      ║" -ForegroundColor White
+    Write-Host "  ║  Current Settings:                                                  ║" -ForegroundColor Cyan
+    Write-Host "  ║  • Intensity: $($global:config.Intensity.PadRight(54)) ║" -ForegroundColor White
+    Write-Host "  ║  • Mode: $($global:config.Mode.PadRight(59)) ║" -ForegroundColor White
+    Write-Host "  ║                                                                      ║" -ForegroundColor White
+    Write-Host "  ╚══════════════════════════════════════════════════════════════════════╝" -ForegroundColor Cyan
+    Write-Host "`n"
+
+    $response = Read-Host "  Press ENTER to begin the demonstration, or Ctrl+C to exit"
+}
+
+function Show-Debrief {
+    Clear-Host
+    Write-Host "`n`n"
+    Write-Host "  ╔══════════════════════════════════════════════════════════════════════╗" -ForegroundColor Green
+    Write-Host "  ║              SECURITY AWARENESS TRAINING - DEBRIEF                   ║" -ForegroundColor Green
+    Write-Host "  ╠══════════════════════════════════════════════════════════════════════╣" -ForegroundColor Green
+    Write-Host "  ║                                                                      ║" -ForegroundColor White
+    Write-Host "  ║  Key Takeaways from this Demonstration:                             ║" -ForegroundColor White
+    Write-Host "  ║                                                                      ║" -ForegroundColor White
+    Write-Host "  ║  1. Multi-Stage Attacks: Real attacks follow a kill chain           ║" -ForegroundColor Cyan
+    Write-Host "  ║     Initial Access → Escalation → Persistence → Exfiltration        ║" -ForegroundColor Gray
+    Write-Host "  ║                                                                      ║" -ForegroundColor White
+    Write-Host "  ║  2. Defense Strategies:                                             ║" -ForegroundColor Cyan
+    Write-Host "  ║     • Keep systems patched (CVEs shown are real!)                   ║" -ForegroundColor Gray
+    Write-Host "  ║     • Use EDR/XDR solutions to detect anomalies                     ║" -ForegroundColor Gray
+    Write-Host "  ║     • Implement network segmentation                                ║" -ForegroundColor Gray
+    Write-Host "  ║     • Enable MFA and Credential Guard                               ║" -ForegroundColor Gray
+    Write-Host "  ║     • Maintain offline backups (ransomware protection)              ║" -ForegroundColor Gray
+    Write-Host "  ║     • Security awareness training for all staff                     ║" -ForegroundColor Gray
+    Write-Host "  ║                                                                      ║" -ForegroundColor White
+    Write-Host "  ║  3. Incident Response:                                              ║" -ForegroundColor Cyan
+    Write-Host "  ║     • Have an IR plan ready before an attack                        ║" -ForegroundColor Gray
+    Write-Host "  ║     • Practice tabletop exercises regularly                         ║" -ForegroundColor Gray
+    Write-Host "  ║     • Know your escalation contacts                                 ║" -ForegroundColor Gray
+    Write-Host "  ║                                                                      ║" -ForegroundColor White
+    Write-Host "  ║  4. Report Suspicious Activity:                                     ║" -ForegroundColor Cyan
+    Write-Host "  ║     • If you see something unusual, report it immediately           ║" -ForegroundColor Gray
+    Write-Host "  ║     • Don't click suspicious links or open unknown attachments      ║" -ForegroundColor Gray
+    Write-Host "  ║     • Verify requests for sensitive information                     ║" -ForegroundColor Gray
+    Write-Host "  ║                                                                      ║" -ForegroundColor White
+    Write-Host "  ╠══════════════════════════════════════════════════════════════════════╣" -ForegroundColor Green
+    Write-Host "  ║  Remember: Security is everyone's responsibility!                   ║" -ForegroundColor Yellow
+    Write-Host "  ╚══════════════════════════════════════════════════════════════════════╝" -ForegroundColor Green
+    Write-Host "`n"
+
+    Read-Host "  Press ENTER to exit"
+}
+
+# ============================================================================
 # MAIN EXECUTION SWITCH
 # ============================================================================
 
